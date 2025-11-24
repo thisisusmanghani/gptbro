@@ -1,18 +1,63 @@
-# Getting Started with Create React App
+<div align="center">
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Nexus AI Frontend
 
-## Available Scripts
+### Modern React UI for Conversational AI
 
-In the project directory, you can run:
+[![React](https://img.shields.io/badge/React-19.1.0-61DAFB?style=flat-square&logo=react)](https://reactjs.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1.8-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
+[![Vercel](https://img.shields.io/badge/Deploy-Vercel-000000?style=flat-square&logo=vercel)](https://vercel.com)
 
-### `npm start`
+**Beautiful, responsive chat interface powered by React and Tailwind CSS**
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+</div>
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
+
+## Features
+
+### **Modern Design**
+- **Dark/Light Theme Toggle** - Seamless theme switching with persistent preferences
+- **Smooth Animations** - Fluid transitions and loading states
+- **Responsive Layout** - Perfect on mobile, tablet, and desktop
+- **Custom Icons** - Heroicons integration for beautiful UI elements
+
+### **Chat Experience**
+- **Real-time Messaging** - Instant chat interface with typing indicators
+- **Message History** - Persistent chat logs with localStorage
+- **AI Personalities** - Switch between Default, Creative, and Technical modes
+- **Image Upload** - Share images for AI analysis
+- **Export Chats** - Download conversation history
+
+---
+
+## Quick Start
+
+### Prerequisites
+```bash
+Node.js 16+
+npm or yarn
+```
+
+### Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Set up environment (optional for local development)
+cp .env.example .env.local
+```
+
+### Development
+
+```bash
+# Start development server
+npm start
+
+# Runs on http://localhost:3000
+# Hot reload enabled
+```
 
 ### `npm test`
 

@@ -1,8 +1,8 @@
 {
-  "name": "python-project-2-root",
+  "name": "nexus-ai-chatbot",
   "version": "1.0.0",
   "private": true,
-  "homepage": "https://markdennis2121.github.io/ChatBot/",
+  "homepage": "https://thisisusmanghani.github.io/chatbot/",
   "scripts": {
     "deploy-frontend": "npm run build --prefix frontend && gh-pages -d frontend/build"
   },

@@ -1,11 +1,23 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import google.generativeai as genai
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
 
-API_KEY = "AIzaSyA9kMJt63VaOeWxr8gooyUJBWOVOd5ceII"
+# Configure CORS to allow frontend access
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,https://your-frontend.vercel.app").split(",")
+CORS(app, origins=ALLOWED_ORIGINS)
+
+# Get API key from environment variable
+API_KEY = os.getenv("GEMINI_API_KEY")
+if not API_KEY:
+    raise ValueError("GEMINI_API_KEY environment variable is not set!")
+
 genai.configure(api_key=API_KEY)
 
 # Initialize Gemini model
@@ -45,4 +57,6 @@ def chat():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    port = int(os.getenv("PORT", 5000))
+    debug = os.getenv("FLASK_ENV") != "production"
+    app.run(host="0.0.0.0", port=port, debug=debug)
