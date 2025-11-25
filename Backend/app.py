@@ -93,8 +93,12 @@ LANGUAGES: English (Professional), Urdu (Native)
 def home():
     return "Flask backend is running! Go to /api/chat to chat."
 
-@app.route("/api/chat", methods=["POST"])
+@app.route("/api/chat", methods=["POST", "OPTIONS"])
+@cross_origin()
 def chat():
+    # Handle preflight OPTIONS request
+    if request.method == "OPTIONS":
+        return "", 204
     data = request.get_json()
     messages = data.get("messages")
 
