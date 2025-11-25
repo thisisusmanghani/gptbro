@@ -3,3 +3,11 @@
   command = "npm run build"
   publish = "build"
   functions = "frontend/netlify/functions" # This line is optional if you don't use Netlify Functions
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[build.environment]
+  REACT_APP_BACKEND_URL = "https://chatbot-ptjv.onrender.com"

@@ -10,9 +10,16 @@ load_dotenv()
 app = Flask(__name__)
 
 # Configure CORS properly for production
+# Allow your frontend domain and localhost for development
+ALLOWED_ORIGINS = [
+    "https://gpt-duxl.onrender.com",  # Your production frontend
+    "http://localhost:3000",  # Local development
+    "http://localhost:5173",  # Vite dev server
+]
+
 CORS(app, 
      resources={r"/*": {
-         "origins": "*",
+         "origins": ALLOWED_ORIGINS,
          "methods": ["GET", "POST", "OPTIONS"],
          "allow_headers": ["Content-Type"],
          "supports_credentials": False
