@@ -1,6 +1,6 @@
 <div align="center">
 
-# Nexus AI Frontend
+# GPT Bro Frontend 😎
 
 ### Modern React UI for Conversational AI
 
@@ -9,6 +9,23 @@
 [![Vercel](https://img.shields.io/badge/Deploy-Vercel-000000?style=flat-square&logo=vercel)](https://vercel.com)
 
 **Beautiful, responsive chat interface powered by React and Tailwind CSS**
+
+</div>
+
+---
+
+## 📸 Screenshots
+
+<div align="center">
+
+### Light Mode
+![Light Mode](public/light%20mode.png)
+
+### Dark Mode
+![Dark Mode](public/dark%20mode.png)
+
+### AI Personalities
+![AI Personalities](public/ai%20personalities.png)
 
 </div>
 
@@ -24,10 +41,12 @@
 
 ### **Chat Experience**
 - **Real-time Messaging** - Instant chat interface with typing indicators
-- **Message History** - Persistent chat logs with localStorage
 - **AI Personalities** - Switch between Default, Creative, and Technical modes
-- **Image Upload** - Share images for AI analysis
-- **Export Chats** - Download conversation history
+- **Epic Personality** - Movie-style dialogues inspired by Wednesday, Vikings, GOT, Breaking Bad, and Peaky Blinders
+- **Fun Word Responses** - Instant hardcoded responses for casual expressions
+- **Random Thinking Messages** - 15+ dramatic thinking animations
+- **Auto-focus Input** - Input field automatically focuses after bot response
+- **Easter Egg** - Hidden surprise feature with preloaded image
 
 ---
 

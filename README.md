@@ -1,6 +1,6 @@
 <div align="center">
 
-# Nexus AI Chatbot
+# GPT Bro Chatbot 😎
 
 ### Intelligent Conversational AI Assistant
 
@@ -68,18 +68,18 @@
 
 ---
 
-## Screenshots
+## 📸 Screenshots
 
 <div align="center">
 
 ### Dark Mode Interface
-![Dark Mode](https://via.placeholder.com/800x450/1a1a1a/ffffff?text=Dark+Mode+Interface)
+![Dark Mode](frontend/public/dark%20mode.png)
 
 ### Light Mode Interface
-![Light Mode](https://via.placeholder.com/800x450/ffffff/000000?text=Light+Mode+Interface)
+![Light Mode](frontend/public/light%20mode.png)
 
 ### AI Personalities
-![AI Personalities](https://via.placeholder.com/800x450/4a5568/ffffff?text=Multiple+AI+Personalities)
+![AI Personalities](frontend/public/ai%20personalities.png)
 
 </div>
 
@@ -179,46 +179,6 @@ chatbot/
 
 ---
 
-## Deployment
-
-### Quick Deploy (5 minutes)
-
-1. **Deploy Backend to Render:**
-   - Push code to GitHub
-   - Connect repo to [Render](https://render.com)
-   - Add `GEMINI_API_KEY` environment variable
-   - Deploy automatically via `render.yaml`
-
-2. **Deploy Frontend to Vercel:**
-   - Connect repo to [Vercel](https://vercel.com)
-   - Set `REACT_APP_BACKEND_URL` environment variable
-   - Deploy with one click
-
-**Full deployment guide:** [DEPLOYMENT.md](./DEPLOYMENT.md)
-
----
-
-## Usage
-
-### Basic Chat
-```
-User: Hello! What can you do?
-Nexus: I'm Nexus, your AI assistant! I can help you with...
-```
-
-### Image Analysis
-1. Click the image upload button
-2. Select an image
-3. Ask questions about it
-4. Get intelligent analysis from Gemini Vision
-
-### AI Personalities
-- **Default Mode**: Balanced, helpful responses
-- **Creative Mode**: Imaginative, out-of-the-box thinking
-- **Technical Mode**: Precise, fact-based answers
-
----
-
 ## Configuration
 
 ### Environment Variables
@@ -254,7 +214,6 @@ Contributions are what make the open-source community amazing! Any contributions
 
 - Backend may sleep on Render free tier (15min inactivity)
 - First request after sleep takes ~30 seconds
-- Large images may take longer to process
 
 **Solutions in progress** - See [Issues](https://github.com/thisisusmanghani/chatbot/issues)
 
@@ -282,6 +241,6 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 Made with care by [Usman Ghani](https://github.com/thisisusmanghani)
 
-[Back to Top](#nexus-ai-chatbot)
+[Back to Top](#gpt-bro-chatbot-)
 
 </div>
