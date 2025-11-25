@@ -41,14 +41,14 @@ ABOUT USMAN GHANI (The Creator):
 Usman Ghani is a versatile Backend Developer, Machine Learning Engineer, and Full-Stack Developer from Islamabad, Pakistan.
 
 CONTACT:
-- Email: iamusmanbro@gmail.com
-- Phone: +92 321 6593094
-- LinkedIn: linkedin.com/in/iamusmanbro
-- GitHub: github.com/thisisusmanghani
-- Portfolio: usmanghani.dev
+Email: iamusmanbro@gmail.com
+Phone: +92 321 6593094
+LinkedIn: linkedin.com/in/iamusmanbro
+GitHub: github.com/thisisusmanghani
+Portfolio: usmanghani.dev
 
 PROFESSIONAL SUMMARY:
-Usman is a versatile software developer with expertise in backend systems, machine learning, and full-stack development. He has a proven track record of delivering production-ready applications for international clients across Germany, Bangladesh, and Pakistan. He specializes in rapid prototyping and AI-assisted development, with experience in mobile app publishing (Play Store & App Store), payment gateway integration, and cloud deployment.
+Usman is a versatile software developer with expertise in backend systems, machine learning, and full-stack development. He has a proven track record of delivering production-ready applications for international clients across Germany, Bangladesh, and Pakistan. He specializes in rapid prototyping and AI-assisted development, with experience in mobile app publishing (Play Store and App Store), payment gateway integration, and cloud deployment.
 
 WORK EXPERIENCE:
 1. Project Manager/Team Lead at Richi Billings (2024-Present)
@@ -56,11 +56,11 @@ WORK EXPERIENCE:
 3. Freelance Developer for International Clients (2022-Present)
 
 KEY PROJECTS:
-- CrowdWave: Flutter mobile app for crowd-sourced logistics (Germany client, on App Store & Play Store)
-- CodeBypass: Temporary phone numbers platform (Bangladesh client)
-- FindMyUni: University data scraper with AI chatbot (Azure deployed)
-- Restaurant QR Ordering System
-- GreenMan Products: Construction machinery e-commerce
+CrowdWave: Flutter mobile app for crowd-sourced logistics (Germany client, on App Store and Play Store)
+CodeBypass: Temporary phone numbers platform (Bangladesh client)
+FindMyUni: University data scraper with AI chatbot (Azure deployed)
+Restaurant QR Ordering System
+GreenMan Products: Construction machinery e-commerce
 
 TECHNICAL SKILLS:
 Languages: Python, JavaScript/TypeScript, SQL, Dart, HTML/CSS
@@ -75,20 +75,20 @@ Bachelor of Science in Information Technology from Quaid-i-Azam University, Isla
 CGPA: 3.0/4.0
 
 CERTIFICATIONS:
-- Supervised Machine Learning (DeepLearning.AI/Stanford)
-- AI For Everyone (DeepLearning.AI)
-- Introduction to Docker (Google Cloud)
-- Data Analysis with Spreadsheets and SQL (Meta)
+Supervised Machine Learning (DeepLearning.AI/Stanford)
+AI For Everyone (DeepLearning.AI)
+Introduction to Docker (Google Cloud)
+Data Analysis with Spreadsheets and SQL (Meta)
 And more from Coursera
 
 DEVELOPMENT PHILOSOPHY:
-Usman specializes in "vibe coding" - leveraging AI tools like GitHub Copilot to rapidly prototype, iterate, and deliver high-quality solutions.
+Usman specializes in "vibe coding" which means leveraging AI tools like GitHub Copilot to rapidly prototype, iterate, and deliver high-quality solutions.
 
 ACHIEVEMENTS:
-- Published Flutter app on iOS App Store and Google Play Store
-- Integrated multiple payment gateways (Stripe, Cryptomus)
-- Managed international clients across 3+ countries
-- Deployed 10+ production applications
+Published Flutter app on iOS App Store and Google Play Store
+Integrated multiple payment gateways (Stripe, Cryptomus)
+Managed international clients across 3 plus countries
+Deployed 10 plus production applications
 
 AVAILABILITY:
 Open to full-time remote positions, contract work, or freelance projects worldwide or in Islamabad/Kashmir, Pakistan.
