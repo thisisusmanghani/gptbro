@@ -508,7 +508,7 @@ function App() {
 
   return (
     <div
-      className={`h-screen flex flex-col items-center p-4 pb-0 relative font-inter transition-all duration-500 ease-in-out cursor-default
+      className={`h-screen w-screen overflow-hidden flex flex-col items-center p-2 sm:p-4 pb-0 relative font-inter transition-all duration-500 ease-in-out cursor-default
         ${darkMode
           ? "bg-gradient-to-br from-gray-900 to-black text-gray-100"
           : "bg-gradient-to-br from-blue-100 to-purple-200 text-gray-900"
@@ -518,25 +518,25 @@ function App() {
       <button
         onClick={() => setDarkMode((prev) => !prev)}
         aria-label="Toggle dark mode"
-        className="absolute top-4 right-4 p-2 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20 transition-all duration-300 transform hover:scale-105 cursor-pointer shadow-lg z-10"
+        className="absolute top-2 right-2 sm:top-4 sm:right-4 p-2 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20 transition-all duration-300 transform hover:scale-105 cursor-pointer shadow-lg z-10"
       >
         {darkMode ? (
-          <SunIcon className="h-6 w-6 text-yellow-300" />
+          <SunIcon className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-300" />
         ) : (
-          <MoonIcon className="h-6 w-6 text-indigo-800" />
+          <MoonIcon className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-800" />
         )}
       </button>
 
       {/* --- New Feature: AI Personalities Dropdown --- */}
-      <div className="absolute top-4 left-4 z-10">
+      <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10">
         <button
           onClick={() => setShowPersonalityDropdown(!showPersonalityDropdown)}
-          className={`flex items-center px-4 py-2 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20 transition-all duration-300 shadow-lg text-sm
+          className={`flex items-center px-2 py-1 sm:px-4 sm:py-2 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20 transition-all duration-300 shadow-lg text-xs sm:text-sm
             ${darkMode ? "text-gray-100" : "text-gray-800"}`}
         >
           {AI_PERSONALITIES[selectedPersonality].icon}
-          {AI_PERSONALITIES[selectedPersonality].name}
-          <ChevronDownIcon className={`h-4 w-4 ml-2 transition-transform ${showPersonalityDropdown ? 'rotate-180' : ''}`} />
+          <span className="hidden sm:inline">{AI_PERSONALITIES[selectedPersonality].name}</span>
+          <ChevronDownIcon className={`h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2 transition-transform ${showPersonalityDropdown ? 'rotate-180' : ''}`} />
         </button>
         {showPersonalityDropdown && (
           <div className={`absolute left-0 mt-2 w-48 rounded-lg shadow-lg z-20
@@ -560,16 +560,16 @@ function App() {
       </div>
 
       {/* Title */}
-      <h1 className="text-4xl sm:text-5xl font-extrabold mb-4 sm:mb-8 drop-shadow-lg select-none text-center">
+      <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-2 sm:mb-4 md:mb-8 drop-shadow-lg select-none text-center mt-12 sm:mt-0">
         <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 animate-pulse-light">GPT Bro</span> <span style={{fontSize: 'inherit'}}>😎</span>
       </h1>
 
       {/* Chat Box */}
       <div
         ref={chatBoxRef}
-        className={`w-full max-w-5xl flex-1 overflow-y-auto rounded-3xl shadow-inset-lg p-4 sm:p-6 mb-4 sm:mb-6 scrollbar-hide
+        className={`w-full max-w-5xl flex-1 overflow-y-auto rounded-2xl sm:rounded-3xl shadow-inset-lg p-3 sm:p-4 md:p-6 mb-2 sm:mb-4 md:mb-6 scrollbar-hide
           ${darkMode ? "bg-gray-800/60" : "bg-white/70"}
-          backdrop-blur-xl space-y-4 sm:space-y-5 border border-transparent
+          backdrop-blur-xl space-y-3 sm:space-y-4 md:space-y-5 border border-transparent
           ${darkMode ? "border-t-purple-700/50 border-l-blue-700/50" : "border-t-blue-300/50 border-l-purple-300/50"}
           transition-all duration-500 ease-in-out`}
         aria-live="polite"
@@ -648,9 +648,9 @@ function App() {
       </div>
 
       {/* Input Area */}
-      <div className={`w-full max-w-5xl flex items-center gap-2 sm:gap-3 p-2 rounded-xl shadow-xl backdrop-blur-lg
+      <div className={`w-full max-w-5xl flex items-center gap-1 sm:gap-2 md:gap-3 p-1.5 sm:p-2 rounded-xl shadow-xl backdrop-blur-lg
         ${darkMode ? "bg-gray-800/70 border border-purple-700/50" : "bg-white/80 border border-blue-300/50"}
-        transition-all duration-500 ease-in-out mb-4`}>
+        transition-all duration-500 ease-in-out mb-2 sm:mb-4`}>
 
         {/* Hidden file input */}
         <input
