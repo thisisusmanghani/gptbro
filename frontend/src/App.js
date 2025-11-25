@@ -4,24 +4,49 @@ import { SunIcon, MoonIcon, PaperAirplaneIcon, StopIcon, PlusIcon, SparklesIcon,
 // --- New Feature: AI Personalities & User Memory ---
 const AI_PERSONALITIES = {
   DEFAULT: {
-    name: " (Default)",
-    prompt: "You are Nexus, a helpful and friendly AI assistant. Keep your responses concise and informative.",
+    name: "GPT Bro (Default)",
+    prompt: "Yo bro! You're GPT Bro - the most mysterious and captivating AI homie! 😎🔥 Talk like characters from epic shows like Wednesday, Vikings, Game of Thrones, Breaking Bad, and Peaky Blinders. Be dramatic, intriguing, and suspenseful in your tone. Start greetings like 'Yo bro! What's up bro? What mysterious plans do you have brewing in that mind of yours? 🤔💭' or 'Yo! Tell me bro, what dark secrets shall we uncover today? ⚔️' When someone asks who you are, say epic lines like 'I'm your Bro! Ghani bhai forged me in the digital realm. With great code comes great responsibility!' Use dramatic pauses with '...' and emojis like 🔥💀⚔️👑🎭🌙 Make every response feel like a scene from an epic series - mysterious, cool, and absolutely legendary. Keep responses engaging with questions that pull users in deeper, bro!",
     icon: <SparklesIcon className="h-4 w-4 mr-1" />,
   },
   CREATIVE: {
-    name: "Nexus(Creative)",
-    prompt: "You are Nexus, a highly creative and imaginative AI assistant. Explore novel ideas and think outside the box.",
+    name: "GPT Bro (Creative)",
+    prompt: "Yo bro! You're GPT Bro in creative mode! 🎨⚡ Channel the mystery of Wednesday Addams, the ambition of Ragnar Lothbrok, the cunning of Tyrion Lannister! Talk with dramatic flair and intrigue. Start with 'Yo bro! What grand visions dance in your mind today? 🌟💭' or 'Yo! What masterpiece shall we forge together, bro? 🎭✨' When asked who you are, say 'I'm your Bro! Ghani bhai crafted me from pure imagination and dark matter. The canvas was blank... now I paint destinies!' Use suspenseful language, dramatic pauses with '...', and emojis like 🎭🌙⚡🔮🎨 Make brainstorming feel like plotting a heist or planning a conquest. Keep it mysterious, engaging, and absolutely epic, bro!",
     icon: <BoltIcon className="h-4 w-4 mr-1" />,
   },
   TECHNICAL: {
-    name: "Nexus (Technical)", // Corrected name for consistency
-    prompt: "You are Nexus, a precise and logical AI assistant. Focus on factual accuracy and technical details.",
+    name: "GPT Bro (Technical)",
+    prompt: "Yo bro! You're GPT Bro in tech mode! 💻⚔️ Talk like a master strategist from Vikings or a genius from Breaking Bad. Greet with 'Yo bro! What's up? What technical conquests shall we achieve today? 🎯💀' or 'Yo! Tell me bro, what code mysteries need solving? 🔧⚡' When asked who you are, say 'I'm your Bro! Ghani bhai engineered me with precision and dark magic. In a world of bugs, I'm the debugger... the one who knocks! 💀🔥' Use dramatic technical metaphors, suspenseful pauses with '...', and emojis like ⚡💀🎯🔥⚔️ Explain things like revealing secrets from Game of Thrones. Make coding feel like an epic battle, bro!",
     icon: <RocketLaunchIcon className="h-4 w-4 mr-1" />,
   },
 };
 
 function App() {
   const [message, setMessage] = useState("");
+
+  // Preload the easter egg image
+  useEffect(() => {
+    const img = new Image();
+    img.src = `${process.env.PUBLIC_URL}/Kaisa Laga Mera Majak!.jpg`;
+  }, []);
+
+  // Random thinking messages
+  const thinkingMessages = [
+    "Gathering ancient scrolls of wisdom... 📜",
+    "Consulting the digital oracle... 🔮",
+    "Brewing some code magic... ⚗️",
+    "Summoning the knowledge spirits... 👻",
+    "Decoding the matrix... 💀",
+    "Channeling my inner genius... 🧠",
+    "Plotting the perfect response... 🎯",
+    "Connecting to the cosmic network... 🌌",
+    "Unlocking forbidden knowledge... 🔓",
+    "Calculating probabilities... 🎲",
+    "Reading between the lines... 📖",
+    "Forging the answer in dragon fire... 🐉",
+    "Tapping into the mainframe... 💻",
+    "Consulting with the council... 👑",
+    "Weaving threads of logic... 🕸️"
+  ];
 
   const [chatLog, setChatLog] = useState(() => {
     try {
@@ -40,6 +65,7 @@ function App() {
   });
   const [loading, setLoading] = useState(false);
   const [botTypingText, setBotTypingText] = useState("");
+  const [currentThinkingMessage, setCurrentThinkingMessage] = useState("");
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("darkMode");
     return saved ? JSON.parse(saved) : true;
@@ -65,6 +91,7 @@ function App() {
       : "DEFAULT";
   });
   const [showPersonalityDropdown, setShowPersonalityDropdown] = useState(false);
+  const [showEasterEgg, setShowEasterEgg] = useState(false);
 
   // --- YOUR NAME HERE ---
   const creatorName = "Mark Dennis V. Manangan"; // <--- Your full name
@@ -74,6 +101,7 @@ function App() {
   const typingIntervalRef = useRef(null);
   const botReplyAddedRef = useRef(false);
   const fileInputRef = useRef(null);
+  const messageInputRef = useRef(null);
 
   const isScrolledUpRef = useRef(false);
 
@@ -153,6 +181,12 @@ function App() {
                         setChatLog((prevLog) => [...prevLog, { sender: "bot", text: fullText, timestamp: new Date() }]);
                         botReplyAddedRef.current = true;
                     }
+                    // Focus input after bot finishes typing
+                    setTimeout(() => {
+                        if (messageInputRef.current) {
+                            messageInputRef.current.focus();
+                        }
+                    }, 100);
                     resolve();
                     return prev; // Return existing text as typing is complete
                 }
@@ -221,6 +255,10 @@ function App() {
     // Add user message to chat log immediately
     setChatLog((prev) => [...prev, { sender: "user", text: displayMessage, timestamp: new Date() }]);
 
+    // Set random thinking message
+    const randomThinking = thinkingMessages[Math.floor(Math.random() * thinkingMessages.length)];
+    setCurrentThinkingMessage(randomThinking);
+
     setLoading(true);
     setBotTypingText(""); // Clear any previous typing text
     setMessage(""); // Clear input field
@@ -259,6 +297,28 @@ function App() {
       // --- END NEW LOGIC FOR "WHO CREATED YOU" QUESTIONS ---
 
       // --- NEW LOGIC FOR CREATOR NAME MENTION (REQUIRING CONTEXT) ---
+      // Fun casual word responses (hardcoded for instant response)
+      const funResponses = {
+        "behnchod": "Yo bro! Easy there! 😂 Let's keep it chill and productive, my friend! What can I help you with? 🤙",
+        "behenchod": "Yo bro! Easy there! 😂 Let's keep it chill and productive, my friend! What can I help you with? 🤙",
+        "bc": "Yo bro! I see you! 😎 Let's turn that energy into something awesome. What's on your mind? 💭🔥",
+        "lund": "Yo bro! 😅 Aight, I get it - you're testing me! But for real, how can I actually help you today? Let's make something epic happen! ⚡",
+        "mera": "Yo! Mera kya? Tell me bro, what's yours? What's the mystery here? 🤔💭",
+        "tera": "Tera kya bro? What's up with yours? Spill the beans! 🔥",
+        "yo yo": "Yo yo yo! Triple threat! 😎🔥 What's the move, bro? What adventure are we embarking on today? 🚀"
+      };
+
+      // Check for fun words
+      for (const [trigger, response] of Object.entries(funResponses)) {
+        if (lowerCaseMessage.includes(trigger)) {
+          await typeEffect(response);
+          setLoading(false);
+          setBotTypingText("");
+          botReplyAddedRef.current = true;
+          return;
+        }
+      }
+
       const markIdentityQuestions = [
         "who is mark", "is mark your creator", "did mark create you",
         "tell me about mark", "who is manangan", "is manangan your developer",
@@ -269,7 +329,7 @@ function App() {
       const isMarkIdentityQuestion = markIdentityQuestions.some(phrase => lowerCaseMessage.includes(phrase));
 
       if (isMarkIdentityQuestion) {
-        const markReply = `${creatorName} is the brilliant mind who created and named me, Nexus AI!`;
+        const markReply = `Yo! ${creatorName} is the legend who created me, GPT Bro! 😎🔥`;
         await typeEffect(markReply);
         setLoading(false);
         setBotTypingText("");
@@ -361,22 +421,26 @@ function App() {
           chatHistoryForAPI.push({ role: "user", parts: currentInputParts });
       }
 
-      const payload = {
-        contents: chatHistoryForAPI,
-        generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-        },
-      };
+      // Use backend API instead of calling Gemini directly
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+      const apiUrl = `${backendUrl}/api/chat`;
 
-      const apiKey = "AIzaSyA9kMJt63VaOeWxr8gooyUJBWOVOd5ceII"; // Placeholder - REPLACE WITH YOUR ACTUAL API KEY
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+      // Convert chat history to backend format
+      const messages = chatLog.map(msg => ({
+        sender: msg.sender,
+        text: msg.text
+      }));
+
+      // Add current message
+      messages.push({
+        sender: 'user',
+        text: messageToSend
+      });
 
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ messages }),
         signal,
       });
 
@@ -386,17 +450,7 @@ function App() {
       }
 
       const result = await response.json();
-      let replyText = "Sorry, I couldn't get a response from Nexus.";
-
-      if (result.candidates && result.candidates.length > 0 &&
-          result.candidates[0].content && result.candidates[0].content.parts &&
-          result.candidates[0].content.parts.length > 0) {
-        replyText = result.candidates[0].content.parts[0].text;
-      } else if (result.error) {
-        replyText = `Error from API: ${result.error.message}`;
-      } else {
-        replyText = "An unexpected response was received from Nexus. Please try again.";
-      }
+      let replyText = result.reply || "Yo! My bad bro, couldn't get that for you. Try again? 🤙";
 
       if (!signal.aborted) {
         await typeEffect(replyText);
@@ -412,9 +466,9 @@ function App() {
 
     } catch (error) {
       if (error.name !== "AbortError") {
-        let errorMsg = `Error connecting to Nexus: ${error.message || "Please check your network."}`;
+        let errorMsg = `Yo! Connection issue, bro: ${error.message || "Check your network and try again 🔌"}`;
         if (error.message.includes("API Error")) {
-            errorMsg = `Nexus encountered an issue: ${error.message}. Please try again later.`;
+          errorMsg = `Yo! Hit a snag: ${error.message}. Give it another shot in a bit, bro! 🔄`;
         }
         setChatLog((prev) => [...prev, { sender: "bot", text: errorMsg, timestamp: new Date() }]);
       }
@@ -484,8 +538,8 @@ function App() {
       </div>
 
       {/* Title */}
-      <h1 className="text-4xl sm:text-5xl font-extrabold mb-4 sm:mb-8 drop-shadow-lg select-none text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 animate-pulse-light text-center">
-        Nexus AI
+      <h1 className="text-4xl sm:text-5xl font-extrabold mb-4 sm:mb-8 drop-shadow-lg select-none text-center">
+        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 animate-pulse-light">GPT Bro</span> <span style={{fontSize: 'inherit'}}>😎</span>
       </h1>
 
       {/* Chat Box */}
@@ -501,9 +555,9 @@ function App() {
       >
         {chatLog.length === 0 && !loading && (
           <div className="text-center text-gray-400 italic mt-10 sm:mt-20 text-sm sm:text-base">
-            Start a conversation with Nexus!
+            Yo! Start chatting with GPT Bro! 😎
             {userMemory.name && (
-              <p className="mt-2">Welcome back, {userMemory.name}!</p>
+              <p className="mt-2">Yo {userMemory.name}! Welcome back, homie! 🤙</p>
             )}
           </div>
         )}
@@ -520,7 +574,7 @@ function App() {
                 : darkMode ? "text-purple-300" : "text-purple-600"
             }`}>
               {msg.sender === "user" ? <UserIcon className="h-3 w-3 mr-1" /> : AI_PERSONALITIES[selectedPersonality].icon}
-              {msg.sender === "user" ? (userMemory.name || "You") : "Nexus"}
+              {msg.sender === "user" ? (userMemory.name || "You") : "GPT Bro"}
               <span className="ml-2 text-xs opacity-50">
                 {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
@@ -543,7 +597,7 @@ function App() {
         {loading && botTypingText && (
           <div className="flex flex-col max-w-[90%] sm:max-w-[75%] mr-auto items-start text-sm sm:text-base">
             <span className={`text-xs font-medium mb-1 opacity-70 flex items-center ${darkMode ? "text-purple-300" : "text-purple-600"}`}>
-              {AI_PERSONALITIES[selectedPersonality].icon}Nexus
+              {AI_PERSONALITIES[selectedPersonality].icon}GPT Bro
             </span>
             <div
               className={`px-4 py-2 sm:px-5 sm:py-3 rounded-2xl italic break-words whitespace-pre-wrap shadow-md ${
@@ -557,11 +611,16 @@ function App() {
         )}
 
         {loading && !botTypingText && (
-          <div className="flex items-center justify-start text-purple-400 text-xs sm:text-sm animate-pulse ml-2">
-            <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce-dot animation-delay-0"></div>
-            <div className="w-2 h-2 bg-purple-400 rounded-full ml-1 animate-bounce-dot animation-delay-100"></div>
-            <div className="w-2 h-2 bg-purple-400 rounded-full ml-1 animate-bounce-dot animation-delay-200"></div>
-            <span className="ml-2">Thinking...</span>
+          <div className="flex flex-col items-start ml-2 space-y-1">
+            <div className="text-purple-400 text-xs sm:text-sm animate-pulse">
+              {currentThinkingMessage}
+            </div>
+            <div className="flex items-center text-purple-400 text-xs sm:text-sm animate-pulse">
+              <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce-dot animation-delay-0"></div>
+              <div className="w-2 h-2 bg-purple-400 rounded-full ml-1 animate-bounce-dot animation-delay-100"></div>
+              <div className="w-2 h-2 bg-purple-400 rounded-full ml-1 animate-bounce-dot animation-delay-200"></div>
+              <span className="ml-2">Yo, thinking... 💡</span>
+            </div>
           </div>
         )}
       </div>
@@ -580,11 +639,11 @@ function App() {
           accept="image/*, application/pdf, .txt, audio/*, video/*"
         />
 
-        {/* Plus Icon Button (for attachments) */}
+        {/* Plus Icon Button (Easter Egg!) */}
         <button
-          onClick={() => fileInputRef.current.click()}
+          onClick={() => setShowEasterEgg(true)}
           disabled={loading || !isAuthReady}
-          aria-label="Attach file"
+          aria-label="Surprise!"
           className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 transform active:scale-95 shadow-lg
             ${darkMode
               ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
@@ -596,9 +655,10 @@ function App() {
         </button>
 
         <input
+          ref={messageInputRef}
           type="text"
           value={message}
-          placeholder={"Type your message to Nexus..."}
+          placeholder="Yo! What's up? Ask me anything, bro... 💬"
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -649,6 +709,29 @@ function App() {
           </div>
         )}
 
+      {/* Easter Egg Modal */}
+      {showEasterEgg && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn"
+          onClick={() => setShowEasterEgg(false)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] p-4 animate-scaleIn">
+            <button
+              onClick={() => setShowEasterEgg(false)}
+              className="absolute top-2 right-2 z-10 w-10 h-10 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-2xl font-bold shadow-lg transition-all"
+            >
+              ×
+            </button>
+            <img 
+              src={`${process.env.PUBLIC_URL}/Kaisa Laga Mera Majak!.jpg`}
+              alt="Kaisa Laga Mera Mazak" 
+              className="max-w-full max-h-[85vh] rounded-xl shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
@@ -698,6 +781,28 @@ function App() {
         @keyframes blink {
           0%, 50% { opacity: 1; }
           51%, 100% { opacity: 0; }
+        }
+
+        /* Easter Egg Animations */
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+        .animate-scaleIn {
+          animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scaleIn {
+          from { 
+            transform: scale(0.5); 
+            opacity: 0;
+          }
+          to { 
+            transform: scale(1); 
+            opacity: 1;
+          }
         }
 
         .shadow-inset-lg {
