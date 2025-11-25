@@ -16,3 +16,16 @@ services:
       - key: FLASK_ENV
         value: production
     healthCheckPath: /
+
+  # Frontend Static Site
+  - type: web
+    name: gpt-bro
+    env: static
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/build
+    envVars:
+      - key: REACT_APP_BACKEND_URL
+        value: https://chatbot-nayp.onrender.com

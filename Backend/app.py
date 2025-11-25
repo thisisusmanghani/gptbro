@@ -10,7 +10,7 @@ load_dotenv()
 app = Flask(__name__)
 
 # Configure CORS to allow frontend access
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,https://your-frontend.vercel.app").split(",")
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,https://gpt-bro.onrender.com").split(",")
 CORS(app, origins=ALLOWED_ORIGINS)
 
 # Get API key from environment variable
