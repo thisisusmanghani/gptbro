@@ -32,8 +32,41 @@ if not API_KEY:
 
 genai.configure(api_key=API_KEY)  # type: ignore
 
-# Initialize Gemini model
-model = genai.GenerativeModel("gemini-pro")  # type: ignore
+# Initialize Gemini model with fallback options (all available models)
+MODEL_OPTIONS = [
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-flash-latest",
+    "gemini-2.0-flash-exp",
+    "gemini-2.0-flash-lite",
+    "gemini-flash-lite-latest",
+    "gemini-pro-latest",
+    "gemini-2.5-pro",
+    "gemini-2.0-pro-exp"
+]
+
+def get_working_model():
+    """Try to find a working model from the available options"""
+    is_production = os.getenv("FLASK_ENV") == "production"
+    
+    # Try predefined models (optimized order)
+    for model_name in MODEL_OPTIONS:
+        try:
+            model = genai.GenerativeModel(model_name)  # type: ignore
+            # Test the model with a simple request
+            response = model.generate_content("Hi")
+            if not is_production:
+                print(f"✅ Successfully initialized model: {model_name}")
+            return model
+        except Exception as e:
+            if not is_production:
+                error_msg = str(e)[:100]  # Truncate long errors
+                print(f"❌ Model {model_name} failed: {error_msg}")
+            continue
+    
+    raise Exception("No working Gemini model found! Please check your API key and internet connection.")
+
+model = get_working_model()
 
 # Usman Ghani's CV Knowledge Base
 CV_KNOWLEDGE = """
@@ -103,6 +136,8 @@ def home():
 @app.route("/api/chat", methods=["POST", "OPTIONS"])
 @cross_origin()
 def chat():
+    global model
+    
     # Handle preflight OPTIONS request
     if request.method == "OPTIONS":
         return "", 204
@@ -142,15 +177,33 @@ When asked about dates, time, current events, or "today", always use the current
 
         contents.append({"role": role, "parts": [{"text": text}]})
 
-    # Debug logging to inspect request before sending
-    print("Sending request to Gemini API with CV context")
-
-    try:
-        response = model.generate_content(contents)
-        return jsonify({"reply": response.text})
-    except Exception as e:
-        print(f"Error calling Gemini API: {e}")
-        return jsonify({"error": str(e)}), 500
+    is_production = os.getenv("FLASK_ENV") == "production"
+    
+    max_retries = 2
+    for attempt in range(max_retries):
+        try:
+            response = model.generate_content(contents)
+            return jsonify({"reply": response.text})
+        except Exception as e:
+            error_msg = str(e)
+            if not is_production:
+                print(f"Error calling Gemini API (attempt {attempt + 1}/{max_retries}): {error_msg[:200]}")
+            
+            # If model not found, try to reinitialize with a different model
+            if "not found" in error_msg.lower() or "not supported" in error_msg.lower():
+                if attempt < max_retries - 1:
+                    if not is_production:
+                        print("🔄 Attempting to reinitialize with a different model...")
+                    try:
+                        model = get_working_model()
+                        continue  # Retry with the new model
+                    except Exception as reinit_error:
+                        if not is_production:
+                            print(f"Failed to reinitialize model: {reinit_error}")
+            
+            # If last attempt, return error
+            if attempt == max_retries - 1:
+                return jsonify({"error": "Service temporarily unavailable. Please try again."}), 500
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
