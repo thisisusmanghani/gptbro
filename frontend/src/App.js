@@ -567,7 +567,7 @@ function App() {
       {/* Chat Box */}
       <div
         ref={chatBoxRef}
-        className={`w-full max-w-3xl flex-1 overflow-y-auto rounded-3xl shadow-inset-lg p-4 sm:p-6 mb-4 sm:mb-6 scrollbar-hide
+        className={`w-full max-w-5xl flex-1 overflow-y-auto rounded-3xl shadow-inset-lg p-4 sm:p-6 mb-4 sm:mb-6 scrollbar-hide
           ${darkMode ? "bg-gray-800/60" : "bg-white/70"}
           backdrop-blur-xl space-y-4 sm:space-y-5 border border-transparent
           ${darkMode ? "border-t-purple-700/50 border-l-blue-700/50" : "border-t-blue-300/50 border-l-purple-300/50"}
@@ -586,7 +586,7 @@ function App() {
         {chatLog.map((msg, index) => (
           <div
             key={index}
-            className={`flex flex-col max-w-[90%] sm:max-w-[75%] text-sm sm:text-base ${
+            className={`flex flex-col max-w-[95%] sm:max-w-[85%] text-sm sm:text-base ${
               msg.sender === "user" ? "ml-auto items-end" : "mr-auto items-start"
             }`}
           >
@@ -617,7 +617,7 @@ function App() {
 
         {/* --- UI/UX Enhancement: Loading Indicator (Thinking dots) and Typing Animation --- */}
         {loading && botTypingText && (
-          <div className="flex flex-col max-w-[90%] sm:max-w-[75%] mr-auto items-start text-sm sm:text-base">
+          <div className="flex flex-col max-w-[95%] sm:max-w-[85%] mr-auto items-start text-sm sm:text-base">
             <span className={`text-xs font-medium mb-1 opacity-70 flex items-center ${darkMode ? "text-purple-300" : "text-purple-600"}`}>
               {AI_PERSONALITIES[selectedPersonality].icon}GPT Bro
             </span>
@@ -648,7 +648,7 @@ function App() {
       </div>
 
       {/* Input Area */}
-      <div className={`w-full max-w-3xl flex items-center gap-2 sm:gap-3 p-2 rounded-xl shadow-xl backdrop-blur-lg
+      <div className={`w-full max-w-5xl flex items-center gap-2 sm:gap-3 p-2 rounded-xl shadow-xl backdrop-blur-lg
         ${darkMode ? "bg-gray-800/70 border border-purple-700/50" : "bg-white/80 border border-blue-300/50"}
         transition-all duration-500 ease-in-out mb-4`}>
 
