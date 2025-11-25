@@ -431,10 +431,6 @@ function App() {
       // Use backend API instead of calling Gemini directly
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
       const apiUrl = `${backendUrl}/api/chat`;
-      
-      console.log('🔥 Backend URL:', backendUrl);
-      console.log('🔥 API URL:', apiUrl);
-      console.log('🔥 Environment:', process.env.NODE_ENV);
 
       // Convert chat history to backend format
       const messages = chatLog.map(msg => ({

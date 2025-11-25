@@ -33,7 +33,7 @@ if not API_KEY:
 genai.configure(api_key=API_KEY)  # type: ignore
 
 # Initialize Gemini model
-model = genai.GenerativeModel("gemini-2.0-flash")  # type: ignore
+model = genai.GenerativeModel("gemini-1.5-flash")  # type: ignore
 
 # Usman Ghani's CV Knowledge Base
 CV_KNOWLEDGE = """
