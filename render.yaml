@@ -7,7 +7,7 @@ services:
     plan: free
     branch: main
     buildCommand: cd Backend && pip install -r requirements.txt
-    startCommand: cd Backend && python app.py
+    startCommand: cd Backend && gunicorn app:app
     envVars:
       - key: GEMINI_API_KEY
         sync: false
