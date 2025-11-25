@@ -1,6 +1,15 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { SunIcon, MoonIcon, PaperAirplaneIcon, StopIcon, PlusIcon, SparklesIcon, ChevronDownIcon, BoltIcon, RocketLaunchIcon, UserIcon } from "@heroicons/react/24/solid";
 
+// Function to format markdown-style text
+const formatMarkdown = (text) => {
+  // Replace **text** with <strong>text</strong>
+  text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // Replace *text* with <em>text</em>
+  text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  return text;
+};
+
 // --- New Feature: AI Personalities & User Memory ---
 const AI_PERSONALITIES = {
   DEFAULT: {
@@ -600,8 +609,8 @@ function App() {
                     ? "bg-gray-700 text-gray-50" // Improved contrast for bot in dark mode
                     : "bg-gray-200 text-gray-800"
               }`}
+              dangerouslySetInnerHTML={{ __html: formatMarkdown(msg.text) }}
             >
-              {msg.text}
             </div>
           </div>
         ))}
@@ -617,7 +626,7 @@ function App() {
                 darkMode ? "bg-gray-700 text-gray-50" : "bg-gray-200 text-gray-800"
               }`}
             >
-              {botTypingText}
+              <span dangerouslySetInnerHTML={{ __html: formatMarkdown(botTypingText) }}></span>
               <span className="blinking-cursor text-purple-400">|</span>
             </div>
           </div>
@@ -783,6 +792,16 @@ function App() {
         .scrollbar-hide {
             -ms-overflow-style: none;
             scrollbar-width: none;
+        }
+
+        /* Markdown formatting styles */
+        strong {
+          font-weight: 700;
+          color: inherit;
+        }
+        em {
+          font-style: italic;
+          color: inherit;
         }
 
         .blinking-cursor {
