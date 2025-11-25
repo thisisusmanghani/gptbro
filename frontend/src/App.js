@@ -105,6 +105,13 @@ function App() {
 
   const isScrolledUpRef = useRef(false);
 
+  // Auto-focus input on component mount and after errors
+  useEffect(() => {
+    if (messageInputRef.current) {
+      messageInputRef.current.focus();
+    }
+  }, []);
+
   useEffect(() => {
     localStorage.setItem("darkMode", JSON.stringify(darkMode));
     if (darkMode) {
@@ -424,6 +431,10 @@ function App() {
       // Use backend API instead of calling Gemini directly
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
       const apiUrl = `${backendUrl}/api/chat`;
+      
+      console.log('🔥 Backend URL:', backendUrl);
+      console.log('🔥 API URL:', apiUrl);
+      console.log('🔥 Environment:', process.env.NODE_ENV);
 
       // Convert chat history to backend format
       const messages = chatLog.map(msg => ({
@@ -471,6 +482,12 @@ function App() {
           errorMsg = `Yo! Hit a snag: ${error.message}. Give it another shot in a bit, bro! 🔄`;
         }
         setChatLog((prev) => [...prev, { sender: "bot", text: errorMsg, timestamp: new Date() }]);
+        // Focus input after error
+        setTimeout(() => {
+          if (messageInputRef.current) {
+            messageInputRef.current.focus();
+          }
+        }, 100);
       }
     } finally {
       if (!botReplyAddedRef.current && botTypingText.trim() !== "") {
