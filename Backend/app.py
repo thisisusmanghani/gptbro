@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
@@ -9,8 +9,14 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Configure CORS to allow frontend access (allow all for now)
-CORS(app, resources={r"/*": {"origins": "*"}})
+# Configure CORS properly for production
+CORS(app, 
+     resources={r"/*": {
+         "origins": "*",
+         "methods": ["GET", "POST", "OPTIONS"],
+         "allow_headers": ["Content-Type"],
+         "supports_credentials": False
+     }})
 
 # Get API key from environment variable
 API_KEY = os.getenv("GEMINI_API_KEY")
