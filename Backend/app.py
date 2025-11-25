@@ -10,8 +10,8 @@ load_dotenv()
 app = Flask(__name__)
 
 # Configure CORS to allow frontend access
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,https://gpt-bro.onrender.com").split(",")
-CORS(app, origins=ALLOWED_ORIGINS)
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,https://gpt-bro.onrender.com,https://gpt-bro-*.onrender.com").split(",")
+CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=True)
 
 # Get API key from environment variable
 API_KEY = os.getenv("GEMINI_API_KEY")
