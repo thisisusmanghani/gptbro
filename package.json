@@ -1,12 +1,14 @@
 {
-  "name": "nexus-ai-chatbot",
-  "version": "1.0.0",
+  "name": "chatbot-gpt-bro",
+  "version": "2.0.0",
   "private": true,
-  "homepage": "https://thisisusmanghani.github.io/chatbot/",
   "scripts": {
-    "deploy-frontend": "npm run build --prefix frontend && gh-pages -d frontend/build"
+    "dev": "vercel dev",
+    "build": "cd frontend && npm install && npm run build",
+    "deploy": "vercel --prod",
+    "deploy-preview": "vercel"
   },
   "devDependencies": {
-    "gh-pages": "^6.3.0"
+    "vercel": "^33.0.0"
   }
 }
