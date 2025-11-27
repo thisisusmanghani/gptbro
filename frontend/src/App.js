@@ -24,7 +24,7 @@ function App() {
     return saved ? JSON.parse(saved) : true;
   });
 
-  const [userMemory, setUserMemory] = useState(() => {
+  const [userMemory] = useState(() => {
     try {
       const saved = localStorage.getItem("userMemory");
       return saved ? JSON.parse(saved) : {};
@@ -38,12 +38,6 @@ function App() {
   const messageInputRef = useRef(null);
   const isScrolledUpRef = useRef(false);
 
-  const thinkingMessages = [
-    "Thinking...",
-    "Processing...",
-    "Analyzing...",
-  ];
-
   useEffect(() => {
     if (messageInputRef.current) messageInputRef.current.focus();
   }, []);
@@ -54,7 +48,6 @@ function App() {
   }, [darkMode]);
 
   useEffect(() => { localStorage.setItem("chatLog", JSON.stringify(chatLog)); }, [chatLog]);
-  useEffect(() => { localStorage.setItem("userMemory", JSON.stringify(userMemory)); }, [userMemory]);
 
   useEffect(() => {
     const chatBox = chatBoxRef.current;
