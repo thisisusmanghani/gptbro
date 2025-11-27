@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { SunIcon, MoonIcon, PaperAirplaneIcon, StopIcon, SparklesIcon, UserIcon } from "@heroicons/react/24/solid";
+import { SunIcon, MoonIcon, PaperAirplaneIcon, StopIcon, SparklesIcon, UserIcon, ChevronDownIcon } from "@heroicons/react/24/solid";
 
 // Function to format markdown-style text
 const formatMarkdown = (text) => {
@@ -8,8 +8,21 @@ const formatMarkdown = (text) => {
   return text;
 };
 
+// Available Gemini models
+const GEMINI_MODELS = {
+  'gemini-2.0-flash-exp': { name: 'Gemini 2.0 Flash', description: 'Fast & efficient' },
+  'gemini-exp-1206': { name: 'Gemini Experimental', description: 'Latest features' },
+  'gemini-2.5-flash': { name: 'Gemini 2.5 Flash', description: 'Balanced' },
+  'gemini-pro': { name: 'Gemini Pro', description: 'Most capable' }
+};
+
 function App() {
   const [message, setMessage] = useState("");
+  const [selectedModel, setSelectedModel] = useState(() => {
+    const saved = localStorage.getItem("selectedModel");
+    return saved || 'gemini-2.0-flash-exp';
+  });
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [chatLog, setChatLog] = useState(() => {
     try {
       const saved = localStorage.getItem("chatLog");
@@ -48,6 +61,7 @@ function App() {
   }, [darkMode]);
 
   useEffect(() => { localStorage.setItem("chatLog", JSON.stringify(chatLog)); }, [chatLog]);
+  useEffect(() => { localStorage.setItem("selectedModel", selectedModel); }, [selectedModel]);
 
   useEffect(() => {
     const chatBox = chatBoxRef.current;
@@ -148,7 +162,7 @@ function App() {
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages }),
+        body: JSON.stringify({ messages, model: selectedModel }),
         signal,
       });
 
@@ -210,12 +224,53 @@ function App() {
           <h1 className="text-xl font-semibold">GPT Bro 😎</h1>
         </div>
         
-        <button
-          onClick={() => setDarkMode(!darkMode)}
-          className={`p-2 rounded-lg ${darkMode ? 'hover:bg-[#2f2f2f]' : 'hover:bg-gray-100'}`}
-        >
-          {darkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Model Selector */}
+          <div className="relative">
+            <button
+              onClick={() => setShowModelDropdown(!showModelDropdown)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
+                darkMode ? 'bg-[#2f2f2f] hover:bg-[#3f3f3f]' : 'bg-gray-100 hover:bg-gray-200'
+              }`}
+            >
+              <span className="hidden sm:inline">{GEMINI_MODELS[selectedModel].name}</span>
+              <span className="sm:hidden">Model</span>
+              <ChevronDownIcon className={`h-4 w-4 transition-transform ${showModelDropdown ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {showModelDropdown && (
+              <div className={`absolute right-0 mt-2 w-56 rounded-lg shadow-lg z-50 ${
+                darkMode ? 'bg-[#2f2f2f] border border-gray-700' : 'bg-white border border-gray-200'
+              }`}>
+                {Object.entries(GEMINI_MODELS).map(([key, model]) => (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      setSelectedModel(key);
+                      setShowModelDropdown(false);
+                    }}
+                    className={`w-full text-left px-4 py-3 text-sm hover:bg-opacity-50 first:rounded-t-lg last:rounded-b-lg ${
+                      darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+                    } ${selectedModel === key ? 'font-semibold' : ''}`}
+                  >
+                    <div className="font-medium">{model.name}</div>
+                    <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {model.description}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* Dark Mode Toggle */}
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className={`p-2 rounded-lg ${darkMode ? 'hover:bg-[#2f2f2f]' : 'hover:bg-gray-100'}`}
+          >
+            {darkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+          </button>
+        </div>
       </header>
 
       {/* Chat Area */}

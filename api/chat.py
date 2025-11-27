@@ -127,6 +127,7 @@ def chat():
     
     data = request.get_json()
     messages = data.get("messages")
+    selected_model = data.get("model", "gemini-2.0-flash-exp")
 
     if not messages or not isinstance(messages, list):
         return jsonify({"error": "No messages provided or invalid format"}), 400
@@ -162,6 +163,17 @@ When asked about dates, time, current events, or "today", always use the current
     max_retries = 2
     for attempt in range(max_retries):
         try:
+            # Try to use the selected model first
+            if attempt == 0:
+                try:
+                    selected_gemini_model = genai.GenerativeModel(selected_model)
+                    response = selected_gemini_model.generate_content(contents)
+                    return jsonify({"reply": response.text})
+                except Exception as model_error:
+                    print(f"Selected model {selected_model} failed: {str(model_error)[:100]}")
+                    # Fall back to default model
+            
+            # Use default model
             response = model.generate_content(contents)
             return jsonify({"reply": response.text})
         except Exception as e:
