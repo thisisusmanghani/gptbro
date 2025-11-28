@@ -1,5 +1,91 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { SunIcon, MoonIcon, PaperAirplaneIcon, StopIcon, SparklesIcon, UserIcon, ChevronDownIcon } from "@heroicons/react/24/solid";
+import { SunIcon, MoonIcon, PaperAirplaneIcon, StopIcon, SparklesIcon, UserIcon } from "@heroicons/react/24/solid";
+
+// Animated Title Component
+const AnimatedTitle = () => {
+  const [currentText, setCurrentText] = useState("");
+  const [showBro, setShowBro] = useState(false);
+  const [animationComplete, setAnimationComplete] = useState(false);
+
+  useEffect(() => {
+    const sequence = [
+      { text: "Yo Bro 😎", delay: 1800 },
+      { text: "Whatsup Bro 👋", delay: 1900 },
+      { text: "Am Here 🔥", delay: 1900 },
+      { text: "Guess Who 🤔", delay: 1900 },
+      { text: "GPT.", delay: 1200 },
+      { text: "GPT..", delay: 900 },
+      { text: "GPT...", delay: 800 },
+      { text: "GPT", delay: 600 }
+    ];
+    let timeoutId;
+    let currentIndex = 0;
+
+    const animateSequence = () => {
+      if (currentIndex < sequence.length) {
+        setCurrentText(sequence[currentIndex].text);
+        
+        timeoutId = setTimeout(() => {
+          currentIndex++;
+          if (currentIndex === sequence.length) {
+            // Show "bro" sliding in and combine with "gpt"
+            setTimeout(() => {
+              setShowBro(true);
+              setTimeout(() => {
+                setCurrentText("GPT Bro 😎");
+                setAnimationComplete(true);
+              }, 700);
+            }, 300);
+          } else {
+            animateSequence();
+          }
+        }, sequence[currentIndex].delay);
+      }
+    };
+
+    // Check if animation already happened in this session
+    const hasAnimated = sessionStorage.getItem('titleAnimated');
+    if (!hasAnimated) {
+      setTimeout(() => {
+        animateSequence();
+      }, 500); // Small delay before starting
+      sessionStorage.setItem('titleAnimated', 'true');
+    } else {
+      setCurrentText("GPT Bro 😎");
+      setAnimationComplete(true);
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, []);
+
+  if (animationComplete) {
+    return <h1 className="text-xl font-semibold">GPT Bro 😎</h1>;
+  }
+
+  return (
+    <div className="relative h-7 flex items-center overflow-hidden">
+      <h1 className="text-xl font-semibold transition-all duration-300 ease-in-out">
+        {currentText === "gpt" && !showBro ? (
+          <>
+            gpt
+            <span className="animate-pulse">...</span>
+          </>
+        ) : currentText === "gpt" && showBro ? (
+          <>
+            gpt
+            <span className="inline-block animate-slide-in-right ml-1">
+              bro 😎
+            </span>
+          </>
+        ) : (
+          <span className="inline-block">{currentText}</span>
+        )}
+      </h1>
+    </div>
+  );
+};
 
 // Function to format markdown-style text
 const formatMarkdown = (text) => {
@@ -8,21 +94,8 @@ const formatMarkdown = (text) => {
   return text;
 };
 
-// Available Gemini models
-const GEMINI_MODELS = {
-  'gemini-2.0-flash-exp': { name: 'Gemini 2.0 Flash', description: 'Fast & efficient' },
-  'gemini-exp-1206': { name: 'Gemini Experimental', description: 'Latest features' },
-  'gemini-2.5-flash': { name: 'Gemini 2.5 Flash', description: 'Balanced' },
-  'gemini-pro': { name: 'Gemini Pro', description: 'Most capable' }
-};
-
 function App() {
   const [message, setMessage] = useState("");
-  const [selectedModel, setSelectedModel] = useState(() => {
-    const saved = localStorage.getItem("selectedModel");
-    return saved || 'gemini-2.0-flash-exp';
-  });
-  const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [chatLog, setChatLog] = useState(() => {
     try {
       const saved = localStorage.getItem("chatLog");
@@ -61,7 +134,6 @@ function App() {
   }, [darkMode]);
 
   useEffect(() => { localStorage.setItem("chatLog", JSON.stringify(chatLog)); }, [chatLog]);
-  useEffect(() => { localStorage.setItem("selectedModel", selectedModel); }, [selectedModel]);
 
   useEffect(() => {
     const chatBox = chatBoxRef.current;
@@ -155,23 +227,33 @@ function App() {
     const signal = abortControllerRef.current.signal;
 
     try {
-      const apiUrl = `/api/chat`;
+      const backendUrl = process.env.REACT_APP_BACKEND_URL;
+      const apiUrl = backendUrl ? `${backendUrl}/api/chat` : '/api/chat';
       const messages = chatLog.map(msg => ({ sender: msg.sender, text: msg.text }));
       messages.push({ sender: 'user', text: messageToSend });
 
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages, model: selectedModel }),
+        body: JSON.stringify({ messages }),
         signal,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`API Error: ${response.status} - ${errorData.error || response.statusText}`);
+      let result;
+      const responseText = await response.text();
+      
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error("Response parsing error:", parseError);
+        console.error("Raw response:", responseText);
+        throw new Error(`Server returned invalid response. This usually means the API is not properly deployed. Status: ${response.status}`);
       }
 
-      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status} - ${result.error || response.statusText}`);
+      }
+
       let replyText = result.reply || "Sorry, couldn't get a response. Try again?";
 
       if (!signal.aborted) {
@@ -181,7 +263,12 @@ function App() {
       }
     } catch (error) {
       if (error.name !== "AbortError") {
-        let errorMsg = `Connection issue: ${error.message || "Check your network and try again"}`;
+        let errorMsg;
+        if (error.message.includes("invalid response") || error.message.includes("Unexpected token")) {
+          errorMsg = "🔧 API deployment issue detected. The backend needs to be redeployed to fix the serverless function configuration.";
+        } else {
+          errorMsg = `Connection issue: ${error.message || "Check your network and try again"}`;
+        }
         setChatLog((prev) => [...prev, { sender: "bot", text: errorMsg, timestamp: new Date() }]);
         setTimeout(() => {
           if (messageInputRef.current) messageInputRef.current.focus();
@@ -209,9 +296,9 @@ function App() {
   };
 
   return (
-    <div className={`flex flex-col h-screen ${darkMode ? 'bg-[#212121] text-white' : 'bg-white text-gray-900'}`}>
+    <div className={`flex flex-col h-screen max-h-screen overflow-hidden ${darkMode ? 'bg-[#212121] text-white' : 'bg-white text-gray-900'}`}>
       {/* Header */}
-      <header className={`flex items-center justify-between px-4 py-3 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+      <header className={`flex-shrink-0 flex items-center justify-between px-4 py-3 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
         <div className="flex items-center gap-3">
           <button
             onClick={handleNewChat}
@@ -221,66 +308,25 @@ function App() {
           >
             New Chat
           </button>
-          <h1 className="text-xl font-semibold">GPT Bro 😎</h1>
+          <AnimatedTitle />
         </div>
         
-        <div className="flex items-center gap-2">
-          {/* Model Selector */}
-          <div className="relative">
-            <button
-              onClick={() => setShowModelDropdown(!showModelDropdown)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
-                darkMode ? 'bg-[#2f2f2f] hover:bg-[#3f3f3f]' : 'bg-gray-100 hover:bg-gray-200'
-              }`}
-            >
-              <span className="hidden sm:inline">{GEMINI_MODELS[selectedModel].name}</span>
-              <span className="sm:hidden">Model</span>
-              <ChevronDownIcon className={`h-4 w-4 transition-transform ${showModelDropdown ? 'rotate-180' : ''}`} />
-            </button>
-            
-            {showModelDropdown && (
-              <div className={`absolute right-0 mt-2 w-56 rounded-lg shadow-lg z-50 ${
-                darkMode ? 'bg-[#2f2f2f] border border-gray-700' : 'bg-white border border-gray-200'
-              }`}>
-                {Object.entries(GEMINI_MODELS).map(([key, model]) => (
-                  <button
-                    key={key}
-                    onClick={() => {
-                      setSelectedModel(key);
-                      setShowModelDropdown(false);
-                    }}
-                    className={`w-full text-left px-4 py-3 text-sm hover:bg-opacity-50 first:rounded-t-lg last:rounded-b-lg ${
-                      darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
-                    } ${selectedModel === key ? 'font-semibold' : ''}`}
-                  >
-                    <div className="font-medium">{model.name}</div>
-                    <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {model.description}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          {/* Dark Mode Toggle */}
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className={`p-2 rounded-lg ${darkMode ? 'hover:bg-[#2f2f2f]' : 'hover:bg-gray-100'}`}
-          >
-            {darkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
-          </button>
-        </div>
+        <button
+          onClick={() => setDarkMode(!darkMode)}
+          className={`p-2 rounded-lg ${darkMode ? 'hover:bg-[#2f2f2f]' : 'hover:bg-gray-100'}`}
+        >
+          {darkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+        </button>
       </header>
 
       {/* Chat Area */}
-      <div ref={chatBoxRef} className="flex-1 overflow-y-auto px-4 py-6">
+      <div ref={chatBoxRef} className="flex-1 overflow-y-auto px-4 py-6 min-h-0">
         <div className="max-w-3xl mx-auto space-y-6">
           {chatLog.length === 0 && !loading && (
             <div className="text-center py-20 text-gray-500">
-              <div className="text-4xl mb-4">😎</div>
-              <p className="text-lg">Start chatting with GPT Bro!</p>
-              {userMemory.name && <p className="mt-2">Welcome back, {userMemory.name}!</p>}
+              <div className="text-4xl mb-4">😎🔥</div>
+              <p className="text-lg">Start chatting with GPT Bro! 💬</p>
+              {userMemory.name && <p className="mt-2">Welcome back, {userMemory.name}! 👋</p>}
             </div>
           )}
           
@@ -338,7 +384,7 @@ function App() {
       </div>
 
       {/* Input Area */}
-      <div className={`border-t px-4 py-4 ${darkMode ? 'border-gray-700 bg-[#212121]' : 'border-gray-200 bg-white'}`}>
+      <div className={`flex-shrink-0 border-t px-4 py-4 safe-area-inset-bottom ${darkMode ? 'border-gray-700 bg-[#212121]' : 'border-gray-200 bg-white'}`}>
         <div className="max-w-3xl mx-auto">
           <div className={`flex items-center gap-2 rounded-3xl border ${darkMode ? 'border-gray-600 bg-[#2f2f2f]' : 'border-gray-300 bg-white'} px-4 py-2`}>
             <input
@@ -351,7 +397,7 @@ function App() {
                   sendMessage();
                 }
               }}
-              placeholder="Message GPT Bro..."
+              placeholder="Message GPT Bro... 💬"
               disabled={loading}
               className={`flex-1 bg-transparent border-none outline-none ${darkMode ? 'text-white placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'}`}
             />
@@ -373,7 +419,7 @@ function App() {
             </button>
           </div>
           <p className="text-xs text-center mt-2 text-gray-500">
-            GPT Bro can make mistakes. Check important info.
+            GPT Bro can make mistakes. Check important info. ⚠️
           </p>
         </div>
       </div>

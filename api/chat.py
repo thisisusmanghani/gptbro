@@ -1,27 +1,15 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import google.generativeai as genai
+import json
 import os
 from datetime import datetime
 
-app = Flask(__name__)
-
-# Configure CORS for Vercel deployment - Allow all origins
-CORS(app, resources={
-    r"/*": {
-        "origins": "*",
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"],
-        "supports_credentials": False
-    }
-})
-
-# Get API key from environment variable
-API_KEY = os.getenv("GEMINI_API_KEY")
-if not API_KEY:
-    raise ValueError("GEMINI_API_KEY environment variable is not set!")
-
-genai.configure(api_key=API_KEY)
+try:
+    import google.generativeai as genai
+    GENAI_AVAILABLE = True
+    print("✅ Google GenerativeAI imported successfully")
+except ImportError as e:
+    print(f"❌ Import error: {e}")
+    GENAI_AVAILABLE = False
+    genai = None
 
 # Initialize Gemini model with fallback options
 MODEL_OPTIONS = [
@@ -38,12 +26,29 @@ MODEL_OPTIONS = [
 
 def get_working_model():
     """Try to find a working model from the available options"""
+    if not GENAI_AVAILABLE:
+        print("❌ Google GenerativeAI library not available")
+        raise Exception("Google GenerativeAI library not available")
+    
+    # Get API key
+    API_KEY = os.getenv("GEMINI_API_KEY")
+    if not API_KEY:
+        print("❌ GEMINI_API_KEY environment variable is not set!")
+        raise Exception("GEMINI_API_KEY environment variable is not set!")
+    
+    print(f"✅ API key found: {API_KEY[:10]}...")
+    
+    try:
+        genai.configure(api_key=API_KEY)
+        print("✅ Genai configured successfully")
+    except Exception as e:
+        print(f"❌ Failed to configure genai: {e}")
+        raise e
+    
     for model_name in MODEL_OPTIONS:
         try:
             model = genai.GenerativeModel(model_name)
-            # Test the model with a simple request
-            response = model.generate_content("Hi")
-            print(f"✅ Successfully initialized model: {model_name}")
+            print(f"✅ Initialized model: {model_name}")
             return model
         except Exception as e:
             print(f"❌ Model {model_name} failed: {str(e)[:100]}")
@@ -51,7 +56,8 @@ def get_working_model():
     
     raise Exception("No working Gemini model found! Please check your API key.")
 
-model = get_working_model()
+# Don't initialize at import time
+model = None
 
 # Usman Ghani's CV Knowledge Base
 CV_KNOWLEDGE = """
@@ -113,32 +119,101 @@ Open to full-time remote positions, contract work, or freelance projects worldwi
 LANGUAGES: English (Professional), Urdu (Native)
 """
 
-@app.route("/", methods=["GET"])
-def home():
-    return jsonify({"message": "ChatBot API is running on Vercel! Use POST /api/chat to chat."})
-
-@app.route("/api/chat", methods=["POST", "OPTIONS"])
-def chat():
+def handler(event, context=None):
+    """Vercel serverless function handler
+    
+    Vercel passes HTTP event with structure:
+    {
+        'httpMethod': 'POST',
+        'headers': {...},
+        'body': '...',  # JSON string
+        'path': '/api/chat',
+        'queryStringParameters': {...}
+    }
+    """
     global model
     
-    # Handle preflight OPTIONS request
-    if request.method == "OPTIONS":
-        return "", 204
-    
-    data = request.get_json()
-    messages = data.get("messages")
-    selected_model = data.get("model", "gemini-2.0-flash-exp")
-
-    if not messages or not isinstance(messages, list):
-        return jsonify({"error": "No messages provided or invalid format"}), 400
-
-    contents = []
-    
-    # Get current date and time
-    current_datetime = datetime.now().strftime("%A, %B %d, %Y at %I:%M %p")
-    
-    # Add CV knowledge and current date as system context
-    system_context = f"""IMPORTANT CONTEXT - You have knowledge about your creator Usman Ghani (Ghani bhai):
+    try:
+        # Debug: Print event structure
+        print(f"Event type: {type(event)}")
+        print(f"Event keys: {list(event.keys()) if isinstance(event, dict) else 'Not a dict'}")
+        
+        # Handle Vercel HTTP event format
+        method = event.get('httpMethod', event.get('method', 'GET')).upper()
+        
+        # Parse request body
+        data = {}
+        if method == 'POST':
+            body = event.get('body', '')
+            print(f"Body type: {type(body)}, Content: {str(body)[:200]}")
+            
+            if isinstance(body, str) and body:
+                try:
+                    data = json.loads(body)
+                except Exception as parse_error:
+                    print(f"JSON parse error: {parse_error}")
+                    data = {}
+            elif isinstance(body, dict):
+                data = body
+        
+        # Set CORS headers
+        headers = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Content-Type': 'application/json'
+        }
+        
+        # Handle OPTIONS request
+        if method == 'OPTIONS':
+            return {
+                'statusCode': 204,
+                'headers': headers,
+                'body': ''
+            }
+        
+        # Handle GET request
+        if method == 'GET':
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({'message': 'ChatBot API is running on Vercel! Use POST /api/chat to chat.'})
+            }
+        
+        # Handle POST request
+        if method == 'POST':
+            # Initialize model if not already done
+            global model
+            if model is None:
+                try:
+                    model = get_working_model()
+                except Exception as e:
+                    print(f"AI initialization failed: {str(e)}")
+                    # Return a fallback response instead of error
+                    return {
+                        'statusCode': 200,
+                        'headers': headers,
+                        'body': json.dumps({
+                            'reply': 'Yo bro! 😎 GPT Bro is currently having some technical issues, but I\'m still here! The AI service is temporarily unavailable, but Ghani bhai is working on it. Try again in a few minutes! 🔥'
+                        })
+                    }
+            
+            messages = data.get('messages')
+            
+            if not messages or not isinstance(messages, list):
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'No messages provided or invalid format'})
+                }
+            
+            contents = []
+            
+            # Get current date and time
+            current_datetime = datetime.now().strftime("%A, %B %d, %Y at %I:%M %p")
+            
+            # Add CV knowledge and current date as system context
+            system_context = f"""IMPORTANT CONTEXT - You have knowledge about your creator Usman Ghani (Ghani bhai):
 
 {CV_KNOWLEDGE}
 
@@ -146,54 +221,100 @@ CURRENT DATE & TIME: {current_datetime}
 
 When asked about dates, time, current events, or "today", always use the current date/time provided above. When asked about Usman, Ghani bhai, your creator, or questions related to his experience, projects, skills, or background, use this knowledge confidently. Speak about him with pride and in your signature dramatic style!
 """
-    
-    # Add system context
-    contents.append({"role": "user", "parts": [{"text": system_context}]})
-    contents.append({"role": "model", "parts": [{"text": "Yo bro! I got all the intel about Ghani bhai locked and loaded in my memory! 🔥💀 Plus I know what time it is right now! Ask me anything about the legend himself or what's happening today!"}]})
-    
-    for msg in messages:
-        role = "user" if msg.get("sender") == "user" else "model"
-        text = msg.get("text", "")
+            
+            # Add system context
+            contents.append({"role": "user", "parts": [{"text": system_context}]})
+            contents.append({"role": "model", "parts": [{"text": "Yo bro! I got all the intel about Ghani bhai locked and loaded in my memory! 🔥💀 Plus I know what time it is right now! Ask me anything about the legend himself or what's happening today!"}]})
+            
+            for msg in messages:
+                role = "user" if msg.get("sender") == "user" else "model"
+                text = msg.get("text", "")
 
-        if role not in ["user", "model"]:
-            continue
+                if role not in ["user", "model"]:
+                    continue
 
-        contents.append({"role": role, "parts": [{"text": text}]})
+                contents.append({"role": role, "parts": [{"text": text}]})
 
-    max_retries = 2
-    for attempt in range(max_retries):
-        try:
-            # Try to use the selected model first
-            if attempt == 0:
+            max_retries = 2
+            for attempt in range(max_retries):
                 try:
-                    selected_gemini_model = genai.GenerativeModel(selected_model)
-                    response = selected_gemini_model.generate_content(contents)
-                    return jsonify({"reply": response.text})
-                except Exception as model_error:
-                    print(f"Selected model {selected_model} failed: {str(model_error)[:100]}")
-                    # Fall back to default model
-            
-            # Use default model
-            response = model.generate_content(contents)
-            return jsonify({"reply": response.text})
-        except Exception as e:
-            error_msg = str(e)
-            print(f"Error calling Gemini API (attempt {attempt + 1}/{max_retries}): {error_msg[:200]}")
-            
-            # Try to reinitialize with a different model
-            if "not found" in error_msg.lower() or "not supported" in error_msg.lower():
-                if attempt < max_retries - 1:
-                    print("🔄 Attempting to reinitialize with a different model...")
-                    try:
-                        model = get_working_model()
-                        continue
-                    except Exception as reinit_error:
-                        print(f"Failed to reinitialize model: {reinit_error}")
-            
-            if attempt == max_retries - 1:
-                return jsonify({"error": "Service temporarily unavailable. Please try again."}), 500
+                    response = model.generate_content(contents)
+                    return {
+                        'statusCode': 200,
+                        'headers': headers,
+                        'body': json.dumps({'reply': response.text})
+                    }
+                except Exception as e:
+                    error_msg = str(e)
+                    print(f"Error calling Gemini API (attempt {attempt + 1}/{max_retries}): {error_msg[:200]}")
+                    
+                    # Try to reinitialize with a different model
+                    if "not found" in error_msg.lower() or "not supported" in error_msg.lower():
+                        if attempt < max_retries - 1:
+                            print("🔄 Attempting to reinitialize with a different model...")
+                            try:
+                                model = get_working_model()
+                                continue
+                            except Exception as reinit_error:
+                                print(f"Failed to reinitialize model: {reinit_error}")
+                    
+                    if attempt == max_retries - 1:
+                        return {
+                            'statusCode': 200,
+                            'headers': headers,
+                            'body': json.dumps({
+                                'reply': 'Yo bro! 😅 I\'m having some connection issues with my AI brain right now. Ghani bhai is probably debugging something! Try asking me again in a moment! 🔧'
+                            })
+                        }
+        
+        return {
+            'statusCode': 405,
+            'headers': headers,
+            'body': json.dumps({'error': 'Method not allowed'})
+        }
+        
+    except Exception as e:
+        print(f"Handler error: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps({'error': f'Internal server error: {str(e)}'})
+        }
 
-# Vercel serverless function handler
-def handler(request):
-    with app.request_context(request.environ):
-        return app.full_dispatch_request()
+
+# For local development with Flask
+if __name__ == "__main__":
+    from flask import Flask, request, jsonify
+    from flask_cors import CORS
+    
+    app = Flask(__name__)
+    CORS(app)
+    
+    @app.route("/", methods=["GET"])
+    def home():
+        return jsonify({"message": "ChatBot API is running locally! Use POST /api/chat to chat."})
+
+    @app.route("/api/chat", methods=["POST", "OPTIONS"])
+    def chat():
+        # Convert Flask request to handler format
+        class MockRequest:
+            def __init__(self):
+                self.method = request.method
+                self.get_json = lambda: request.get_json()
+        
+        mock_request = MockRequest()
+        result = handler(mock_request)
+        
+        if result['body']:
+            response_data = json.loads(result['body'])
+        else:
+            response_data = {}
+            
+        response = jsonify(response_data)
+        response.status_code = result['statusCode']
+        return response
+    
+    app.run(debug=True, port=5000)
