@@ -12,7 +12,8 @@ app = Flask(__name__)
 # Configure CORS properly for production
 # Allow your frontend domain and localhost for development
 ALLOWED_ORIGINS = [
-    "https://gpt-duxl.onrender.com",  # Your production frontend
+    "https://gptbro-gldg5h8w8-usmans-projects-19e9822c.vercel.app",  # Vercel production frontend
+    "https://gptbro.vercel.app",  # Vercel custom domain (if added)
     "http://localhost:3000",  # Local development
     "http://localhost:5173",  # Vite dev server
 ]
