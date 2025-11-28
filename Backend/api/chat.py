@@ -5,34 +5,50 @@ from datetime import datetime
 try:
     import google.generativeai as genai
     GENAI_AVAILABLE = True
-except ImportError:
+    print("✅ Google GenerativeAI imported successfully")
+except ImportError as e:
+    print(f"❌ Import error: {e}")
     GENAI_AVAILABLE = False
     genai = None
 
+# Initialize Gemini model with fallback options
 MODEL_OPTIONS = [
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-flash-latest",
     "gemini-2.0-flash-exp",
-    "gemini-exp-1114",
-    "gemini-exp-1121",
-    "gemini-2.0-flash-thinking-exp-1219",
-    "gemini-2.0-flash-thinking-exp:generate-content"
+    "gemini-2.0-flash-lite",
+    "gemini-flash-lite-latest",
+    "gemini-pro-latest",
+    "gemini-2.5-pro",
+    "gemini-2.0-pro-exp"
 ]
 
 def get_working_model():
+    """Try to find a working model from the available options"""
     if not GENAI_AVAILABLE:
+        print("❌ Google GenerativeAI library not available")
         raise Exception("Google GenerativeAI library not available")
     
+    # Get API key
     API_KEY = os.getenv("GEMINI_API_KEY")
     if not API_KEY:
-        raise Exception("GEMINI_API_KEY not set")
+        print("❌ GEMINI_API_KEY environment variable is not set!")
+        raise Exception("GEMINI_API_KEY environment variable is not set!")
+    
+    print(f"✅ API key found: {API_KEY[:10]}...")
     
     try:
         genai.configure(api_key=API_KEY)
+        print("✅ Genai configured successfully")
     except Exception as e:
-        raise Exception(f"Failed to configure genai: {e}")
+        print(f"❌ Failed to configure genai: {e}")
+        raise e
     
     for model_name in MODEL_OPTIONS:
         try:
             model = genai.GenerativeModel(model_name)
+            print(f"✅ Initialized model: {model_name}")
             return model
         except Exception as e:
             print(f"❌ Model {model_name} failed: {str(e)[:100]}")
