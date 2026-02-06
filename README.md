@@ -57,7 +57,20 @@ vercel --prod
 git push origin main
 ```
 
-## Local Dev
+## Development
+
+### Option 1: GitHub Codespaces (Recommended) 🚀
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=thisisusmanghani/gptbro)
+
+1. Click the badge above or go to the repository and click **Code > Codespaces > Create codespace**
+2. Wait for the environment to set up (dependencies auto-install)
+3. Run frontend: `cd frontend && npm start`
+4. Run backend: `cd Backend && python app.py`
+
+**Includes**: GitHub Copilot, pre-configured extensions, and all dependencies!
+
+### Option 2: Local Development
 
 ```bash
 # Install dependencies
