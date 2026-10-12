@@ -33,41 +33,19 @@ if not API_KEY:
 
 genai.configure(api_key=API_KEY)  # type: ignore
 
-# Initialize Gemini model with fallback options (all available models)
+# Gemini models, tried in order. Free-tier quotas are per model (gemini-2.5-flash allows
+# only 20 requests/day), so when one fails - quota (429), removed, overloaded - the chat
+# falls through to the next. No test call at startup, so booting doesn't spend quota.
 MODEL_OPTIONS = [
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
     "gemini-flash-latest",
-    "gemini-2.0-flash-exp",
-    "gemini-2.0-flash-lite",
+    "gemini-3.5-flash",
+    "gemini-2.5-flash",
+    "gemini-3.5-flash-lite",
     "gemini-flash-lite-latest",
-    "gemini-pro-latest",
-    "gemini-2.5-pro",
-    "gemini-2.0-pro-exp"
 ]
 
-def get_working_model():
-    """Try to find a working model from the available options"""
-    is_production = os.getenv("FLASK_ENV") == "production"
-    
-    # Try predefined models (optimized order)
-    for model_name in MODEL_OPTIONS:
-        try:
-            model = genai.GenerativeModel(model_name)  # type: ignore
-            # Test the model with a simple request
-            response = model.generate_content("Hi")
-            if not is_production:
-                print(f"✅ Successfully initialized model: {model_name}")
-            return model
-        except Exception as e:
-            if not is_production:
-                error_msg = str(e)[:100]  # Truncate long errors
-                print(f"❌ Model {model_name} failed: {error_msg}")
-            continue
-    
-    raise Exception("No working Gemini model found! Please check your API key and internet connection.")
-
-model = get_working_model()
+# Index of the last model that worked, so later requests start there
+current_model_index = 0
 
 # Usman Ghani's CV Knowledge Base
 CV_KNOWLEDGE = """
@@ -137,8 +115,8 @@ def home():
 @app.route("/api/chat", methods=["POST", "OPTIONS"])
 @cross_origin()
 def chat():
-    global model
-    
+    global current_model_index
+
     # Handle preflight OPTIONS request
     if request.method == "OPTIONS":
         return "", 204
@@ -178,33 +156,18 @@ When asked about dates, time, current events, or "today", always use the current
 
         contents.append({"role": role, "parts": [{"text": text}]})
 
-    is_production = os.getenv("FLASK_ENV") == "production"
-    
-    max_retries = 2
-    for attempt in range(max_retries):
+    for offset in range(len(MODEL_OPTIONS)):
+        index = (current_model_index + offset) % len(MODEL_OPTIONS)
+        model_name = MODEL_OPTIONS[index]
         try:
-            response = model.generate_content(contents)
+            response = genai.GenerativeModel(model_name).generate_content(contents)  # type: ignore
+            current_model_index = index
             return jsonify({"reply": response.text})
         except Exception as e:
-            error_msg = str(e)
-            if not is_production:
-                print(f"Error calling Gemini API (attempt {attempt + 1}/{max_retries}): {error_msg[:200]}")
-            
-            # If model not found, try to reinitialize with a different model
-            if "not found" in error_msg.lower() or "not supported" in error_msg.lower():
-                if attempt < max_retries - 1:
-                    if not is_production:
-                        print("🔄 Attempting to reinitialize with a different model...")
-                    try:
-                        model = get_working_model()
-                        continue  # Retry with the new model
-                    except Exception as reinit_error:
-                        if not is_production:
-                            print(f"Failed to reinitialize model: {reinit_error}")
-            
-            # If last attempt, return error
-            if attempt == max_retries - 1:
-                return jsonify({"error": "Service temporarily unavailable. Please try again."}), 500
+            # Logged in production too, so failures show up in the host's logs
+            print(f"Gemini model {model_name} failed, trying next: {str(e)[:200]}", flush=True)
+
+    return jsonify({"error": "Service temporarily unavailable. Please try again."}), 500
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
