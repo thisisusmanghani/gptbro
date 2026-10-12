@@ -1,5 +1,8 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import { SunIcon, MoonIcon, PaperAirplaneIcon, StopIcon, SparklesIcon, UserIcon } from "@heroicons/react/24/solid";
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
+import { SunIcon, MoonIcon, PaperAirplaneIcon, StopIcon, SparklesIcon, UserIcon, ArrowDownIcon } from "@heroicons/react/24/solid";
+
+// Focusing the input on a touch device pops the on-screen keyboard up over the reply
+const isTouchDevice = () => window.matchMedia("(pointer: coarse)").matches;
 
 // Animated Title Component
 const AnimatedTitle = () => {
@@ -122,10 +125,15 @@ function App() {
   const typingIntervalRef = useRef(null);
   const botReplyAddedRef = useRef(false);
   const messageInputRef = useRef(null);
-  const isScrolledUpRef = useRef(false);
+  const lastUserMsgRef = useRef(null);
+  // "anchor": follow the reply until the question reaches the top, "bottom": stick to the end,
+  // "off": the user scrolled away, so leave the view alone
+  const followModeRef = useRef("bottom");
+  const userScrollIntentRef = useRef(false);
+  const [showScrollDown, setShowScrollDown] = useState(false);
 
   useEffect(() => {
-    if (messageInputRef.current) messageInputRef.current.focus();
+    if (messageInputRef.current && !isTouchDevice()) messageInputRef.current.focus();
   }, []);
 
   useEffect(() => {
@@ -135,27 +143,50 @@ function App() {
 
   useEffect(() => { localStorage.setItem("chatLog", JSON.stringify(chatLog)); }, [chatLog]);
 
-  useEffect(() => {
+  // Like ChatGPT: follow the reply down only until the question reaches the top of the
+  // chat area, then stop so a long answer can be read from its start
+  useLayoutEffect(() => {
     const chatBox = chatBoxRef.current;
-    if (chatBox) {
-      const atBottom = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 100;
-      if (!isScrolledUpRef.current || atBottom) {
-        chatBox.scrollTop = chatBox.scrollHeight;
+    if (!chatBox) return;
+    const mode = followModeRef.current;
+    if (mode !== "off") {
+      let target = chatBox.scrollHeight - chatBox.clientHeight;
+      const anchor = lastUserMsgRef.current;
+      if (mode === "anchor" && anchor) {
+        const anchorTop = anchor.getBoundingClientRect().top - chatBox.getBoundingClientRect().top + chatBox.scrollTop;
+        target = Math.min(target, anchorTop - 16);
       }
+      if (target > chatBox.scrollTop) chatBox.scrollTop = target;
     }
+    setShowScrollDown(chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight > 120);
   }, [chatLog, loading, botTypingText]);
 
   useEffect(() => {
     const chatBox = chatBoxRef.current;
-    if (chatBox) {
-      const handleScroll = () => {
-        const atBottom = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 100;
-        isScrolledUpRef.current = !atBottom;
-      };
-      chatBox.addEventListener('scroll', handleScroll);
-      return () => chatBox.removeEventListener('scroll', handleScroll);
-    }
+    if (!chatBox) return;
+    // Only scrolls the user started change the follow mode, not ones caused by layout changes
+    const markUserScroll = () => { userScrollIntentRef.current = true; };
+    const handleScroll = () => {
+      const distance = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight;
+      setShowScrollDown(distance > 120);
+      if (userScrollIntentRef.current) followModeRef.current = distance < 40 ? "bottom" : "off";
+    };
+    const intentEvents = ["wheel", "touchmove", "mousedown"];
+    intentEvents.forEach((e) => chatBox.addEventListener(e, markUserScroll, { passive: true }));
+    chatBox.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      intentEvents.forEach((e) => chatBox.removeEventListener(e, markUserScroll));
+      chatBox.removeEventListener("scroll", handleScroll);
+    };
   }, []);
+
+  const scrollToBottom = () => {
+    const chatBox = chatBoxRef.current;
+    if (!chatBox) return;
+    followModeRef.current = "bottom";
+    userScrollIntentRef.current = false;
+    chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: "smooth" });
+  };
 
   const typeEffect = useCallback((fullText) => {
     return new Promise((resolve) => {
@@ -179,7 +210,7 @@ function App() {
                 botReplyAddedRef.current = true;
               }
               setTimeout(() => {
-                if (messageInputRef.current) messageInputRef.current.focus();
+                if (messageInputRef.current && !isTouchDevice()) messageInputRef.current.focus();
               }, 100);
               resolve();
               return prev;
@@ -215,6 +246,11 @@ function App() {
   const sendMessage = useCallback(async () => {
     const messageToSend = message.trim();
     if (!messageToSend || loading) return;
+
+    followModeRef.current = "anchor";
+    userScrollIntentRef.current = false;
+    // Close the on-screen keyboard so the reply gets the whole screen
+    if (isTouchDevice() && messageInputRef.current) messageInputRef.current.blur();
 
     setChatLog((prev) => [...prev, { sender: "user", text: messageToSend, timestamp: new Date() }]);
 
@@ -271,7 +307,7 @@ function App() {
         }
         setChatLog((prev) => [...prev, { sender: "bot", text: errorMsg, timestamp: new Date() }]);
         setTimeout(() => {
-          if (messageInputRef.current) messageInputRef.current.focus();
+          if (messageInputRef.current && !isTouchDevice()) messageInputRef.current.focus();
         }, 100);
       }
     } finally {
@@ -286,6 +322,8 @@ function App() {
     }
   }, [message, loading, chatLog, typeEffect, botTypingText]);
 
+  const lastUserIndex = chatLog.map((msg) => msg.sender).lastIndexOf("user");
+
   const handleNewChat = () => {
     if (window.confirm("Start a new chat? This will clear the current conversation.")) {
       setChatLog([]);
@@ -296,7 +334,7 @@ function App() {
   };
 
   return (
-    <div className={`flex flex-col h-screen max-h-screen overflow-hidden ${darkMode ? 'bg-[#212121] text-white' : 'bg-white text-gray-900'}`}>
+    <div className={`flex flex-col h-full overflow-hidden ${darkMode ? 'bg-[#212121] text-white' : 'bg-white text-gray-900'}`}>
       {/* Header */}
       <header className={`flex-shrink-0 flex items-center justify-between px-4 py-3 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
         <div className="flex items-center gap-3">
@@ -331,7 +369,7 @@ function App() {
           )}
           
           {chatLog.map((msg, index) => (
-            <div key={index} className={`flex gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div key={index} ref={index === lastUserIndex ? lastUserMsgRef : null} className={`flex gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
               {msg.sender === 'bot' && (
                 <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${darkMode ? 'bg-[#2f2f2f]' : 'bg-gray-200'}`}>
                   <SparklesIcon className="h-5 w-5" />
@@ -361,9 +399,12 @@ function App() {
               <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${darkMode ? 'bg-[#2f2f2f]' : 'bg-gray-200'}`}>
                 <SparklesIcon className="h-5 w-5" />
               </div>
+              {/* Same box as a finished reply, so the text doesn't shift when typing ends */}
               <div className="max-w-[70%]">
-                <div dangerouslySetInnerHTML={{ __html: formatMarkdown(botTypingText) }} />
-                <span className="inline-block w-1 h-4 bg-gray-400 animate-pulse ml-1"></span>
+                <div className="rounded-2xl px-4 py-3">
+                  <div dangerouslySetInnerHTML={{ __html: formatMarkdown(botTypingText) }} />
+                  <span className="inline-block w-1 h-4 bg-gray-400 animate-pulse ml-1"></span>
+                </div>
               </div>
             </div>
           )}
@@ -384,7 +425,18 @@ function App() {
       </div>
 
       {/* Input Area */}
-      <div className={`flex-shrink-0 border-t px-4 py-4 safe-area-inset-bottom ${darkMode ? 'border-gray-700 bg-[#212121]' : 'border-gray-200 bg-white'}`}>
+      <div className={`relative flex-shrink-0 border-t px-4 py-4 safe-area-inset-bottom ${darkMode ? 'border-gray-700 bg-[#212121]' : 'border-gray-200 bg-white'}`}>
+        {showScrollDown && (
+          <button
+            onClick={scrollToBottom}
+            aria-label="Scroll to latest message"
+            className={`absolute -top-12 left-1/2 -translate-x-1/2 p-2 rounded-full border shadow-md ${
+              darkMode ? 'bg-[#2f2f2f] border-gray-600 hover:bg-[#3f3f3f]' : 'bg-white border-gray-300 hover:bg-gray-100'
+            }`}
+          >
+            <ArrowDownIcon className="h-4 w-4" />
+          </button>
+        )}
         <div className="max-w-3xl mx-auto">
           <div className={`flex items-center gap-2 rounded-3xl border ${darkMode ? 'border-gray-600 bg-[#2f2f2f]' : 'border-gray-300 bg-white'} px-4 py-2`}>
             <input
