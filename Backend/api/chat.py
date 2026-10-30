@@ -62,7 +62,7 @@ model = None
 # Usman Ghani's CV Knowledge Base
 CV_KNOWLEDGE = """
 ABOUT USMAN GHANI (The Creator):
-Usman Ghani is a versatile Backend Developer, Machine Learning Engineer, and Full-Stack Developer from Islamabad, Pakistan.
+Usman Ghani is a Full-Stack Developer and Flutter & ML Engineer based in Islamabad, Pakistan.
 
 CONTACT:
 Email: iamusmanbro@gmail.com
@@ -72,49 +72,69 @@ GitHub: github.com/thisisusmanghani
 Portfolio: usmanghani.dev
 
 PROFESSIONAL SUMMARY:
-Usman is a versatile software developer with expertise in backend systems, machine learning, and full-stack development. He has a proven track record of delivering production-ready applications for international clients across Germany, Bangladesh, and Pakistan. He specializes in rapid prototyping and AI-assisted development, with experience in mobile app publishing (Play Store and App Store), payment gateway integration, and cloud deployment.
+Usman has 3+ years of experience shipping production software and has delivered 50+ projects for clients in four countries: Germany, Japan, Bangladesh and Pakistan. His apps are live on the App Store and Google Play. He is currently the lead full-stack developer and sole engineer of AutoPort, a multilingual B2B SaaS for Japanese used-car exporters.
 
 WORK EXPERIENCE:
-1. Project Manager/Team Lead at Richi Billings (2024-Present)
-2. Software Developer at Anylead (2023-2024)
-3. Freelance Developer for International Clients (2022-Present)
+1. Lead Full-Stack Developer and sole engineer at AutoPort (Feb 2025 - Present)
+   AutoPort is a multilingual B2B SaaS for Japanese used-car exporters: vehicles, shipments, container/ETA tracking via ShipsGo, multi-currency append-only buyer ledgers with the FX rate captured per entry, and tenant- and buyer-scoped role-based access.
+   Available in four languages: English, Japanese, Arabic and Urdu (Arabic and Urdu are right-to-left).
+   Stack: Next.js 16 + React 19 web app, a standalone Hono 4 API, Supabase (Postgres, row-level security, Auth, Storage, Realtime), Turborepo monorepo, Vercel (web) + Heroku (API), OpenTelemetry tracing, PostHog analytics.
+   Live at useautoport.com. Case study: usmanghani.dev/case-study/autoport
+2. Full-Stack Developer & Collaborator at TechWebNinja, a web agency (Apr 2024 - Jan 2025)
+   Custom CRMs, admin dashboards and business systems; deployments on Vercel, Hostinger and Azure.
+3. Full-Stack Developer at GreenMan (Aug 2023 - May 2024)
+   Construction-machinery e-commerce platform on Next.js, web-scraping pipelines, OCR and document processing.
+4. Independent / Freelance Developer for International Clients (2021 - Present)
 
 KEY PROJECTS:
-CrowdWave: Flutter mobile app for crowd-sourced logistics (Germany client, on App Store and Play Store)
-CodeBypass: Temporary phone numbers platform (Bangladesh client)
-FindMyUni: University data scraper with AI chatbot (Azure deployed)
-Restaurant QR Ordering System
-GreenMan Products: Construction machinery e-commerce
+CrowdWave (client in Germany): crowd-sourced package delivery. Flutter app on iOS and Android (Stripe payments, geolocation-based matching, realtime tracking with push notifications), plus the marketing site and an operations CRM (React + Firebase).
+CodeBypass (client in Bangladesh): temporary US non-VoIP numbers for online verification. Node.js/Express/MongoDB, TellaBot and DaisySMS providers with automatic fallback, Cryptomus crypto payments, sub-200 ms API responses, admin CRM.
+MMSC (client in Pakistan): group website for INDEX, NOVVES, GreenMan and MVL.
+AutoPort (current work): see WORK EXPERIENCE above.
+
+OTHER PROJECTS:
+Richi Billings: invoicing with PDF export and tax handling
+AnyLead: telemarketing CRM
+UsmanCart: MERN storefront with Stripe
+Nexus: admin dashboard
+Healthcare platform with an AI assistant
+Inventory ERP with barcode scanning
+WebRTC video-conference app
+Odyssey: Three.js portfolio experiment
+FindMyUni: university data scraper with an AI chatbot (deployed on Azure)
+Restaurant QR ordering system
+GPT Bro: this chatbot
 
 TECHNICAL SKILLS:
-Languages: Python, JavaScript/TypeScript, SQL, Dart, HTML/CSS
-Frameworks: React, Next.js, Node.js, Express.js, Flutter, FastAPI, TailwindCSS
-Databases: MongoDB, Firebase, PostgreSQL, MySQL
-AI/ML: Scikit-learn, Pandas, NumPy, Beautiful Soup, Selenium, LangChain
-DevOps: Docker, Azure, Vercel, Netlify, Heroku
-Tools: Stripe, Cryptomus, REST APIs, GitHub Copilot
+Languages: TypeScript, JavaScript, Python, Dart, SQL
+Web: React, Next.js, Node.js, Hono, Express, Tailwind
+Mobile: Flutter, React Native
+Data: Supabase, PostgreSQL, MongoDB, Firebase, MySQL
+ML & AI: FastAPI, scikit-learn, Pandas, NumPy, LangChain
+Cloud & Ops: Docker, Vercel, Azure, Heroku, Turborepo, OpenTelemetry, Git
+Payments: Stripe, Cryptomus
 
 EDUCATION:
-Bachelor of Science in Information Technology from Quaid-i-Azam University, Islamabad (Nov 2021 - June 2025)
-CGPA: 3.0/4.0
+BS Information Technology, Quaid-i-Azam University, Islamabad (2021 - 2025)
 
 CERTIFICATIONS:
 Supervised Machine Learning (DeepLearning.AI/Stanford)
 AI For Everyone (DeepLearning.AI)
 Introduction to Docker (Google Cloud)
 Data Analysis with Spreadsheets and SQL (Meta)
+And more from Coursera
 
 DEVELOPMENT PHILOSOPHY:
-Usman specializes in "vibe coding" which means leveraging AI tools like GitHub Copilot to rapidly prototype, iterate, and deliver high-quality solutions.
+Usman uses AI tools such as GitHub Copilot to prototype and ship quickly.
 
 ACHIEVEMENTS:
-Published Flutter app on iOS App Store and Google Play Store
+50+ projects delivered for clients in four countries (Germany, Japan, Bangladesh, Pakistan)
+Apps live on the iOS App Store and Google Play Store
+Sole engineer of AutoPort, a live multilingual B2B SaaS (useautoport.com)
 Integrated multiple payment gateways (Stripe, Cryptomus)
-Managed international clients across 3 plus countries
-Deployed 10 plus production applications
 
 AVAILABILITY:
-Open to full-time remote positions, contract work, or freelance projects worldwide or in Islamabad/Kashmir, Pakistan.
+Open to remote roles, contracts and freelance work.
 
 LANGUAGES: English (Professional), Urdu (Native)
 """
