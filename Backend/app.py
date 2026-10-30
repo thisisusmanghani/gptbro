@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 import google.generativeai as genai
 import os
+import time
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -36,13 +37,21 @@ genai.configure(api_key=API_KEY)  # type: ignore
 # Gemini models, tried in order. Free-tier quotas are per model (gemini-2.5-flash allows
 # only 20 requests/day), so when one fails - quota (429), removed, overloaded - the chat
 # falls through to the next. No test call at startup, so booting doesn't spend quota.
+# gemini-flash-latest is last: in Oct 2026 it stopped answering and just hung.
 MODEL_OPTIONS = [
-    "gemini-flash-latest",
     "gemini-3.5-flash",
     "gemini-2.5-flash",
     "gemini-3.5-flash-lite",
     "gemini-flash-lite-latest",
+    "gemini-flash-latest",
 ]
+
+# Heroku drops any request that takes over 30s and answers with its own error page,
+# which has no CORS headers, so the browser only shows a CORS error. Keep the whole
+# fallback loop inside that window. The SDK's default is a 600s timeout that retries
+# on 503s, so each call gets its own timeout and no retries.
+REQUEST_BUDGET_SECONDS = 25
+MODEL_TIMEOUT_SECONDS = 15
 
 # Index of the last model that worked, so later requests start there
 current_model_index = 0
@@ -175,18 +184,25 @@ When asked about dates, time, current events, or "today", always use the current
 
         contents.append({"role": role, "parts": [{"text": text}]})
 
+    deadline = time.monotonic() + REQUEST_BUDGET_SECONDS
     for offset in range(len(MODEL_OPTIONS)):
+        remaining = deadline - time.monotonic()
+        if remaining < 2:
+            break
         index = (current_model_index + offset) % len(MODEL_OPTIONS)
         model_name = MODEL_OPTIONS[index]
         try:
-            response = genai.GenerativeModel(model_name).generate_content(contents)  # type: ignore
+            response = genai.GenerativeModel(model_name).generate_content(  # type: ignore
+                contents,
+                request_options={"timeout": min(MODEL_TIMEOUT_SECONDS, remaining), "retry": None},
+            )
             current_model_index = index
             return jsonify({"reply": response.text})
         except Exception as e:
             # Logged in production too, so failures show up in the host's logs
             print(f"Gemini model {model_name} failed, trying next: {str(e)[:200]}", flush=True)
 
-    return jsonify({"error": "Service temporarily unavailable. Please try again."}), 500
+    return jsonify({"error": "Service temporarily unavailable. Please try again."}), 503
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
