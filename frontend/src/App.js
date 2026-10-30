@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { SunIcon, MoonIcon, PaperAirplaneIcon, StopIcon, SparklesIcon, UserIcon, ArrowDownIcon } from "@heroicons/react/24/solid";
 
 // Focusing the input on a touch device pops the on-screen keyboard up over the reply
 const isTouchDevice = () => window.matchMedia("(pointer: coarse)").matches;
+const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // Animated Title Component
 const AnimatedTitle = () => {
@@ -90,12 +93,61 @@ const AnimatedTitle = () => {
   );
 };
 
-// Function to format markdown-style text
-const formatMarkdown = (text) => {
-  text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
-  return text;
+// Bot replies are Markdown (headings, lists, links). react-markdown ignores raw HTML,
+// so a reply can't inject markup into the page.
+const markdownComponents = {
+  a: ({ href, children }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
+  ),
 };
+
+const BotMarkdown = ({ text }) => (
+  <div className="md">
+    <Markdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{text}</Markdown>
+  </div>
+);
+
+// Claude-style thinking state: a star glyph that cycles through shapes, and a label
+// whose letters pulse in a wave. The label rotates while the wait goes on.
+const SPINNER_FRAMES = ["·", "✢", "✶", "✻", "✽", "✻", "✶", "✢"];
+const THINKING_LABELS = ["Thinking", "Cooking", "Connecting the dots", "Asking Ghani bhai", "Locking in"];
+
+const ThinkingIndicator = ({ startedAt, darkMode }) => {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 120);
+    return () => clearInterval(id);
+  }, []);
+
+  const elapsed = Math.max(0, now - startedAt);
+  const glyph = prefersReducedMotion() ? "✻" : SPINNER_FRAMES[Math.floor(elapsed / 120) % SPINNER_FRAMES.length];
+  const label = THINKING_LABELS[Math.floor(elapsed / 3200) % THINKING_LABELS.length];
+  const seconds = Math.floor(elapsed / 1000);
+
+  return (
+    <div className="flex gap-3" role="status" aria-label="GPT Bro is thinking">
+      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${darkMode ? 'bg-[#2f2f2f]' : 'bg-gray-200'}`}>
+        <span className="thinking-glyph" aria-hidden="true">{glyph}</span>
+      </div>
+      <div className="flex items-center gap-2 h-8 px-4" aria-hidden="true">
+        <span key={label} className="thinking-label">
+          {[...`${label}…`].map((ch, i) => (
+            <span key={i} style={{ animationDelay: `${i * 70}ms` }}>{ch === " " ? " " : ch}</span>
+          ))}
+        </span>
+        {seconds > 0 && <span className="thinking-time">{seconds}s</span>}
+      </div>
+    </div>
+  );
+};
+
+// What the thinking state collapses into once the answer arrives
+const ThoughtFor = ({ seconds }) => (
+  <div className="thought-for">
+    <span aria-hidden="true">✻</span> Thought for {seconds}s
+  </div>
+);
 
 function App() {
   const [message, setMessage] = useState("");
@@ -108,6 +160,8 @@ function App() {
   
   const [loading, setLoading] = useState(false);
   const [botTypingText, setBotTypingText] = useState("");
+  const [thinkingStartedAt, setThinkingStartedAt] = useState(null);
+  const [thoughtSeconds, setThoughtSeconds] = useState(null);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("darkMode");
     return saved ? JSON.parse(saved) : true;
@@ -188,7 +242,7 @@ function App() {
     chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: "smooth" });
   };
 
-  const typeEffect = useCallback((fullText) => {
+  const typeEffect = useCallback((fullText, seconds) => {
     return new Promise((resolve) => {
       const words = fullText.split(' ');
       let wordIndex = 0;
@@ -206,7 +260,7 @@ function App() {
               clearInterval(typingIntervalRef.current);
               typingIntervalRef.current = null;
               if (!botReplyAddedRef.current) {
-                setChatLog((prevLog) => [...prevLog, { sender: "bot", text: fullText, timestamp: new Date() }]);
+                setChatLog((prevLog) => [...prevLog, { sender: "bot", text: fullText, thoughtSeconds: seconds, timestamp: new Date() }]);
                 botReplyAddedRef.current = true;
               }
               setTimeout(() => {
@@ -235,13 +289,13 @@ function App() {
       abortControllerRef.current = null;
     }
     if (botTypingText.trim() !== "" && !botReplyAddedRef.current) {
-      setChatLog((prev) => [...prev, { sender: "bot", text: botTypingText, timestamp: new Date() }]);
+      setChatLog((prev) => [...prev, { sender: "bot", text: botTypingText, thoughtSeconds, timestamp: new Date() }]);
       botReplyAddedRef.current = true;
     }
     setLoading(false);
     setBotTypingText("");
     botReplyAddedRef.current = false;
-  }, [botTypingText]);
+  }, [botTypingText, thoughtSeconds]);
 
   const sendMessage = useCallback(async () => {
     const messageToSend = message.trim();
@@ -254,6 +308,9 @@ function App() {
 
     setChatLog((prev) => [...prev, { sender: "user", text: messageToSend, timestamp: new Date() }]);
 
+    const startedAt = Date.now();
+    setThinkingStartedAt(startedAt);
+    setThoughtSeconds(null);
     setLoading(true);
     setBotTypingText("");
     setMessage("");
@@ -293,7 +350,9 @@ function App() {
       let replyText = result.reply || "Sorry, couldn't get a response. Try again?";
 
       if (!signal.aborted) {
-        await typeEffect(replyText);
+        const seconds = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+        setThoughtSeconds(seconds);
+        await typeEffect(replyText, seconds);
       } else {
         setBotTypingText("");
       }
@@ -376,13 +435,21 @@ function App() {
                 </div>
               )}
               
-              <div className={`max-w-[70%] ${msg.sender === 'user' ? 'order-first' : ''}`}>
+              {/* Replies get the full column, like ChatGPT and Claude; questions stay a bubble */}
+              <div className={msg.sender === 'user' ? 'max-w-[70%] order-first' : 'flex-1 min-w-0'}>
                 <div className={`rounded-2xl px-4 py-3 ${
-                  msg.sender === 'user' 
+                  msg.sender === 'user'
                     ? darkMode ? 'bg-[#2f2f2f]' : 'bg-gray-100'
                     : ''
                 }`}>
-                  <div dangerouslySetInnerHTML={{ __html: formatMarkdown(msg.text) }} />
+                  {msg.sender === 'user' ? (
+                    <div className="whitespace-pre-wrap break-words">{msg.text}</div>
+                  ) : (
+                    <>
+                      {msg.thoughtSeconds ? <ThoughtFor seconds={msg.thoughtSeconds} /> : null}
+                      <BotMarkdown text={msg.text} />
+                    </>
+                  )}
                 </div>
               </div>
               
@@ -400,26 +467,17 @@ function App() {
                 <SparklesIcon className="h-5 w-5" />
               </div>
               {/* Same box as a finished reply, so the text doesn't shift when typing ends */}
-              <div className="max-w-[70%]">
+              <div className="flex-1 min-w-0">
                 <div className="rounded-2xl px-4 py-3">
-                  <div dangerouslySetInnerHTML={{ __html: formatMarkdown(botTypingText) }} />
-                  <span className="inline-block w-1 h-4 bg-gray-400 animate-pulse ml-1"></span>
+                  {thoughtSeconds ? <ThoughtFor seconds={thoughtSeconds} /> : null}
+                  <BotMarkdown text={botTypingText} />
                 </div>
               </div>
             </div>
           )}
 
-          {loading && !botTypingText && (
-            <div className="flex gap-3">
-              <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${darkMode ? 'bg-[#2f2f2f]' : 'bg-gray-200'}`}>
-                <SparklesIcon className="h-5 w-5 animate-pulse" />
-              </div>
-              <div className="flex items-center gap-1 text-gray-400">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce animation-delay-100"></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce animation-delay-200"></div>
-              </div>
-            </div>
+          {loading && !botTypingText && thinkingStartedAt && (
+            <ThinkingIndicator startedAt={thinkingStartedAt} darkMode={darkMode} />
           )}
         </div>
       </div>
@@ -477,8 +535,6 @@ function App() {
       </div>
 
       <style>{`
-        .animation-delay-100 { animation-delay: 0.1s; }
-        .animation-delay-200 { animation-delay: 0.2s; }
         strong { font-weight: 600; }
         em { font-style: italic; }
         
